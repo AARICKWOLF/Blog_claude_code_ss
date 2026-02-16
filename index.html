@@ -1,1 +1,1856 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Getting Started with Claude Code — Internal Team Guide</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--bg-s:#111118;--bg-c:#161622;--bg-ch:#1c1c2e;--bg-code:#0d0d14;
+  --accent:#D97757;--accent-l:#e89070;--accent-d:#c4603e;--accent-bg:rgba(217,119,87,.08);--accent-border:rgba(217,119,87,.18);
+  --blue:#60a5fa;--green:#4ade80;--yellow:#fbbf24;--red:#f87171;--purple:#a78bfa;--cyan:#22d3ee;
+  --t1:#eae8e4;--t2:#a8a29e;--t3:#6b6560;
+  --border:#1e1e30;--border-l:#2a2a42;
+  --sidebar-w:272px;--header-h:56px;
+  --radius:10px;--radius-s:6px;
+  --shadow:0 4px 20px rgba(0,0,0,.4);
+  --hdr-bg:rgba(10,10,15,.8);
+  --sel-bg:var(--accent);--sel-color:#fff;
+  --scrollbar-thumb:var(--border-l);
+  --code-inline-bg:var(--bg-code);--code-inline-border:var(--border);
+  --card-hover-bg:rgba(255,255,255,.01);--card-hover-border:rgba(255,255,255,.03);
+}
+[data-theme="light"]{
+  --bg:#f5f5f0;--bg-s:#eceae5;--bg-c:#e4e2dc;--bg-ch:#dbd8d2;--bg-code:#eae8e2;
+  --accent:#c4603e;--accent-l:#b5522e;--accent-d:#a04525;--accent-bg:rgba(196,96,62,.07);--accent-border:rgba(196,96,62,.2);
+  --blue:#2563eb;--green:#16a34a;--yellow:#ca8a04;--red:#dc2626;--purple:#7c3aed;--cyan:#0891b2;
+  --t1:#1a1a1a;--t2:#555550;--t3:#8a8680;
+  --border:#d5d3cd;--border-l:#c5c2bb;
+  --shadow:0 4px 20px rgba(0,0,0,.08);
+  --hdr-bg:rgba(245,245,240,.85);
+  --sel-bg:var(--accent);--sel-color:#fff;
+  --scrollbar-thumb:#c5c2bb;
+  --code-inline-bg:#e4e2dc;--code-inline-border:#d5d3cd;
+  --card-hover-bg:rgba(0,0,0,.015);--card-hover-border:rgba(0,0,0,.06);
+}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--header-h) + 20px)}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t1);line-height:1.75;font-size:15px}
+a{color:var(--accent-l);text-decoration:none;transition:color .15s}a:hover{color:var(--accent)}
+::selection{background:var(--sel-bg);color:var(--sel-color)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:3px}
+
+/* HEADER */
+.hdr{position:fixed;top:0;left:0;right:0;z-index:100;height:var(--header-h);background:var(--hdr-bg);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px}
+.hdr-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px;color:var(--t1);white-space:nowrap}
+.hdr-logo .dot{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--accent-d));display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
+.hdr-logo span{color:var(--t3);font-weight:400;font-size:13px;margin-left:4px}
+
+/* SEARCH */
+.search-box{position:relative;flex:1;max-width:480px;margin:0 auto}
+.search-box input{width:100%;padding:8px 14px 8px 36px;background:var(--bg-c);border:1px solid var(--border);border-radius:var(--radius-s);color:var(--t1);font-size:13.5px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+.search-box input::placeholder{color:var(--t3)}
+.search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(217,119,87,.1)}
+.search-box .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:13px;pointer-events:none}
+.search-box kbd{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--t3);background:var(--bg);border:1px solid var(--border);padding:1px 6px;border-radius:3px;font-family:inherit}
+.sr{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg-c);border:1px solid var(--border);border-radius:var(--radius);max-height:420px;overflow-y:auto;display:none;z-index:200;box-shadow:var(--shadow)}
+.sr.open{display:block}
+.sr-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s}
+.sr-item:hover,.sr-item.active{background:var(--bg-ch)}
+.sr-item:last-child{border-bottom:none}
+.sr-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent)}
+.sr-txt{font-size:13px;color:var(--t2);margin-top:1px}
+.sr-txt mark{background:rgba(217,119,87,.25);color:var(--accent-l);border-radius:2px;padding:0 1px}
+.sr-empty{padding:20px 14px;text-align:center;color:var(--t3);font-size:13px}
+
+.mob-btn{display:none;background:none;border:none;color:var(--t1);font-size:18px;cursor:pointer;padding:6px}
+
+/* THEME TOGGLE */
+.theme-btn{background:none;border:1px solid var(--border);color:var(--t2);width:34px;height:34px;border-radius:var(--radius-s);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s;flex-shrink:0}
+.theme-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.theme-btn .fa-sun{display:none}
+[data-theme="light"] .theme-btn .fa-moon{display:none}
+[data-theme="light"] .theme-btn .fa-sun{display:inline}
+
+/* SIDEBAR */
+.sidebar{position:fixed;top:var(--header-h);left:0;bottom:0;width:var(--sidebar-w);background:var(--bg-s);border-right:1px solid var(--border);overflow-y:auto;padding:16px 0 40px;z-index:50;transition:transform .25s ease}
+.sb-group{padding:0 16px;margin-bottom:4px}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t3);padding:10px 0 4px}
+.sb-nav{list-style:none}
+.sb-nav li a{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:13.5px;color:var(--t2);border-radius:var(--radius-s);transition:all .12s;font-weight:450;border-left:2px solid transparent;margin:1px 0}
+.sb-nav li a i{width:16px;text-align:center;font-size:12px;opacity:.6}
+.sb-nav li a:hover{color:var(--t1);background:var(--card-hover-border)}
+.sb-nav li a.active{color:var(--accent-l);background:var(--accent-bg);border-left-color:var(--accent);font-weight:600}
+.sb-nav li a.active i{opacity:1}
+
+/* LAYOUT */
+.wrap{display:flex;margin-top:var(--header-h);min-height:calc(100vh - var(--header-h))}
+.main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:36px 44px 80px}
+
+/* ARTICLE STYLES */
+.sec{margin-bottom:56px}
+.sec-head{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.sec-ico{width:38px;height:38px;border-radius:var(--radius-s);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sec-ico.o{background:rgba(217,119,87,.1);color:var(--accent)}
+.sec-ico.b{background:rgba(96,165,250,.1);color:var(--blue)}
+.sec-ico.g{background:rgba(74,222,128,.1);color:var(--green)}
+.sec-ico.y{background:rgba(251,191,36,.1);color:var(--yellow)}
+.sec-ico.p{background:rgba(167,139,250,.1);color:var(--purple)}
+.sec-ico.c{background:rgba(34,211,238,.1);color:var(--cyan)}
+h2{font-size:24px;font-weight:800;letter-spacing:-.4px}
+h3{font-size:18px;font-weight:700;margin:28px 0 12px;color:var(--t1)}
+h4{font-size:15px;font-weight:600;margin:18px 0 8px;color:var(--t1)}
+p{color:var(--t2);margin-bottom:12px}
+p.sub{font-size:13px;color:var(--t3);margin:0}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,rgba(217,119,87,.06),rgba(217,119,87,.01));border:1px solid var(--accent-border);border-radius:14px;padding:36px;margin-bottom:40px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-60%;right:-15%;width:350px;height:350px;border-radius:50%;background:radial-gradient(circle,rgba(217,119,87,.05) 0%,transparent 70%)}
+.hero h1{font-size:30px;font-weight:900;letter-spacing:-.8px;margin-bottom:12px;line-height:1.25}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero>p{font-size:15px;max-width:600px}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:16px;font-size:12px;font-weight:500;background:var(--bg-c);border:1px solid var(--border);color:var(--t2)}
+.badge i{font-size:10px}
+
+/* CARDS */
+.card{background:var(--bg-c);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:var(--border-l)}
+.card-t{font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.card-t i{color:var(--accent);font-size:13px}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin:14px 0}
+.mc{background:var(--bg-c);border:1px solid var(--border);border-radius:var(--radius-s);padding:18px;transition:all .15s}
+.mc:hover{border-color:var(--accent);transform:translateY(-1px)}
+.mc-i{font-size:22px;margin-bottom:10px}
+.mc h4{margin:0 0 4px;font-size:14px}.mc p{font-size:12.5px;margin:0}
+
+/* CODE */
+.cb{background:var(--bg-code);border:1px solid var(--border);border-radius:var(--radius-s);margin:14px 0;overflow:hidden}
+.cb-h{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--card-hover-bg);border-bottom:1px solid var(--border)}
+.cb-l{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px}
+.cb-c{background:none;border:1px solid var(--border);border-radius:5px;color:var(--t3);padding:3px 9px;font-size:11px;cursor:pointer;transition:all .15s;font-family:inherit;display:flex;align-items:center;gap:3px}
+.cb-c:hover{border-color:var(--accent);color:var(--accent)}
+.cb-c.ok{border-color:var(--green);color:var(--green)}
+.cb pre{padding:14px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.65;color:var(--t1)}
+code:not(.cb code){background:var(--code-inline-bg);border:1px solid var(--code-inline-border);padding:1px 6px;border-radius:3px;font-size:12.5px;font-family:'JetBrains Mono',monospace;color:var(--accent-l)}
+
+/* TABS */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:0;flex-wrap:wrap}
+.tab-btn{padding:8px 16px;font-size:13px;font-weight:600;color:var(--t3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .12s;font-family:inherit;white-space:nowrap}
+.tab-btn:hover{color:var(--t2)}
+.tab-btn.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-p{display:none;padding:18px 0}.tab-p.on{display:block}
+
+/* LISTS */
+.fl{list-style:none;margin:14px 0}
+.fl li{padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;font-size:14px}
+.fl li:last-child{border-bottom:none}
+.fl li i{color:var(--accent);margin-top:4px;font-size:11px;flex-shrink:0}
+.fl li strong{color:var(--t1)}
+.cl{list-style:none;margin:10px 0}
+.cl li{padding:6px 0;display:flex;align-items:flex-start;gap:8px;color:var(--t2);font-size:13.5px}
+.cl li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px}
+
+/* CALLOUT */
+.co{border-radius:var(--radius-s);padding:14px 16px;margin:14px 0;display:flex;align-items:flex-start;gap:10px;font-size:13.5px}
+.co i{margin-top:2px;flex-shrink:0}
+.co.info{background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15)}.co.info i{color:var(--blue)}
+.co.warn{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15)}.co.warn i{color:var(--yellow)}
+.co.tip{background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.15)}.co.tip i{color:var(--green)}
+.co.danger{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15)}.co.danger i{color:var(--red)}
+
+/* STEPS */
+.steps{counter-reset:step;margin:14px 0}
+.stp{counter-increment:step;position:relative;padding:16px 16px 16px 56px;margin-bottom:10px;background:var(--bg-c);border:1px solid var(--border);border-radius:var(--radius-s)}
+.stp::before{content:counter(step);position:absolute;left:16px;top:16px;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+.stp h4{margin-top:0}.stp p:last-child{margin-bottom:0}
+
+/* TABLE */
+.tw{overflow-x:auto;margin:14px 0;border-radius:var(--radius-s);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{background:var(--bg-c);padding:10px 14px;text-align:left;font-weight:600;color:var(--t1);border-bottom:1px solid var(--border)}
+td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--t2)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--card-hover-bg)}
+
+/* VIDEOS */
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin:14px 0}
+.vcard{background:var(--bg-c);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all .15s}
+.vcard:hover{border-color:var(--border-l);transform:translateY(-1px)}
+.vcard iframe{width:100%;aspect-ratio:16/9;border:none;display:block}
+.vcard-i{padding:14px}
+.vcard-i h4{margin:0 0 4px;font-size:14px}.vcard-i p{margin:0;font-size:12.5px}
+
+/* FAQ */
+.fq{background:var(--bg-c);border:1px solid var(--border);border-radius:var(--radius-s);margin-bottom:6px;overflow:hidden}
+.fq-q{padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:14px;color:var(--t1);transition:background .1s;user-select:none}
+.fq-q:hover{background:var(--card-hover-bg)}
+.fq-q i{color:var(--t3);transition:transform .2s;font-size:11px}
+.fq.open .fq-q i{transform:rotate(180deg)}
+.fq-a{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.fq.open .fq-a{max-height:600px}
+.fq-a-in{padding:0 16px 14px;color:var(--t2);font-size:13.5px;line-height:1.7}
+
+/* RESOURCE LINKS */
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:14px 0}
+.rlink{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg-c);border:1px solid var(--border);border-radius:var(--radius-s);transition:all .15s}
+.rlink:hover{border-color:var(--accent);transform:translateY(-1px)}
+.rlink i{font-size:18px;color:var(--accent);flex-shrink:0}
+.rlink h4{margin:0;font-size:13px;color:var(--t1)}.rlink p{margin:0;font-size:11.5px;color:var(--t3)}
+
+/* FOOTER */
+.footer{margin-left:var(--sidebar-w);padding:28px 44px;border-top:1px solid var(--border);background:var(--bg-s);font-size:12.5px;color:var(--t3);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.footer a{color:var(--t2)}
+
+/* TOC */
+.toc{position:fixed;right:24px;top:calc(var(--header-h) + 24px);width:200px;font-size:12px;display:none}
+@media(min-width:1280px){.toc{display:block}}
+.toc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:8px}
+.toc a{display:block;padding:3px 0 3px 12px;color:var(--t3);border-left:1px solid var(--border);transition:all .12s;line-height:1.5}
+.toc a:hover{color:var(--t2)}
+.toc a.active{color:var(--accent-l);border-left-color:var(--accent)}
+
+/* HIGHLIGHT */
+.hl{background:rgba(217,119,87,.2);outline:2px solid rgba(217,119,87,.3);border-radius:2px;padding:0 1px;scroll-margin-top:100px}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0);box-shadow:var(--shadow)}
+  .main{margin-left:0;padding:20px 16px 60px}.footer{margin-left:0;padding:20px 16px}
+  .mob-btn{display:block}.search-box{max-width:200px}.search-box kbd{display:none}
+  .hero{padding:24px 20px}.hero h1{font-size:22px}
+  .cgrid{grid-template-columns:1fr}.vgrid{grid-template-columns:1fr}
+}
+@media(max-width:480px){.hdr{padding:0 12px;gap:8px}.search-box{max-width:140px}.hero h1{font-size:20px}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <button class="mob-btn" onclick="document.getElementById('sb').classList.toggle('open')" aria-label="Menu"><i class="fas fa-bars"></i></button>
+  <div class="hdr-logo"><div class="dot">C</div> Claude Code Guide <span>Internal Docs</span></div>
+  <div class="search-box">
+    <i class="fas fa-search si"></i>
+    <input type="text" id="si" placeholder="Search everything..." autocomplete="off">
+    <kbd>Ctrl K</kbd>
+    <div class="sr" id="sr"></div>
+  </div>
+  <button class="theme-btn" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle light/dark mode" title="Toggle light/dark mode"><i class="fas fa-moon"></i><i class="fas fa-sun"></i></button>
+</header>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sb">
+  <div class="sb-group">
+    <div class="sb-label">Getting Started</div>
+    <ul class="sb-nav" id="sn">
+      <li><a href="#overview" class="active"><i class="fas fa-compass"></i> Overview</a></li>
+      <li><a href="#quickstart"><i class="fas fa-rocket"></i> Quickstart</a></li>
+      <li><a href="#how-it-works"><i class="fas fa-cogs"></i> How It Works</a></li>
+    </ul>
+  </div>
+  <div class="sb-group">
+    <div class="sb-label">Core Concepts</div>
+    <ul class="sb-nav" id="sn2">
+      <li><a href="#common-workflows"><i class="fas fa-code-branch"></i> Common Workflows</a></li>
+      <li><a href="#best-practices"><i class="fas fa-star"></i> Best Practices</a></li>
+      <li><a href="#claude-md"><i class="fas fa-file-alt"></i> CLAUDE.md</a></li>
+    </ul>
+  </div>
+  <div class="sb-group">
+    <div class="sb-label">Platforms</div>
+    <ul class="sb-nav" id="sn3">
+      <li><a href="#terminal"><i class="fas fa-terminal"></i> Terminal (CLI)</a></li>
+      <li><a href="#vscode"><i class="fas fa-code"></i> VS Code</a></li>
+      <li><a href="#jetbrains"><i class="fab fa-java"></i> JetBrains</a></li>
+      <li><a href="#desktop"><i class="fas fa-desktop"></i> Desktop App</a></li>
+      <li><a href="#web"><i class="fas fa-globe"></i> Web</a></li>
+    </ul>
+  </div>
+  <div class="sb-group">
+    <div class="sb-label">Extend Claude Code</div>
+    <ul class="sb-nav" id="sn4">
+      <li><a href="#mcp"><i class="fas fa-plug"></i> MCP</a></li>
+      <li><a href="#hooks"><i class="fas fa-bolt"></i> Hooks</a></li>
+      <li><a href="#skills"><i class="fas fa-magic"></i> Skills</a></li>
+      <li><a href="#subagents"><i class="fas fa-users-cog"></i> Subagents</a></li>
+      <li><a href="#agent-teams"><i class="fas fa-people-arrows"></i> Agent Teams</a></li>
+    </ul>
+  </div>
+  <div class="sb-group">
+    <div class="sb-label">Configuration</div>
+    <ul class="sb-nav" id="sn5">
+      <li><a href="#settings"><i class="fas fa-sliders-h"></i> Settings</a></li>
+      <li><a href="#permissions"><i class="fas fa-shield-alt"></i> Permissions</a></li>
+      <li><a href="#security"><i class="fas fa-lock"></i> Security</a></li>
+      <li><a href="#models"><i class="fas fa-brain"></i> Models</a></li>
+    </ul>
+  </div>
+  <div class="sb-group">
+    <div class="sb-label">Reference</div>
+    <ul class="sb-nav" id="sn6">
+      <li><a href="#cli-ref"><i class="fas fa-hashtag"></i> CLI Reference</a></li>
+      <li><a href="#checkpointing"><i class="fas fa-history"></i> Checkpointing</a></li>
+      <li><a href="#github-actions"><i class="fab fa-github"></i> GitHub Actions</a></li>
+      <li><a href="#sdk"><i class="fas fa-cube"></i> SDK & Programmatic</a></li>
+      <li><a href="#troubleshooting"><i class="fas fa-wrench"></i> Troubleshooting</a></li>
+    </ul>
+  </div>
+  <div class="sb-group">
+    <div class="sb-label">Integrations</div>
+    <ul class="sb-nav" id="sn-int">
+      <li><a href="#supabase"><i class="fas fa-database"></i> Supabase</a></li>
+    </ul>
+  </div>
+  <div class="sb-group">
+    <div class="sb-label">Resources</div>
+    <ul class="sb-nav" id="sn7">
+      <li><a href="#tutorials"><i class="fas fa-play-circle"></i> Tutorials & Videos</a></li>
+      <li><a href="#resources"><i class="fas fa-book"></i> Docs & Links</a></li>
+      <li><a href="#faq"><i class="fas fa-question-circle"></i> FAQ</a></li>
+    </ul>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="wrap">
+<main class="main">
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Getting Started with <em>Claude Code</em></h1>
+  <p>Claude Code is Anthropic's agentic coding tool. It reads your codebase, edits files, runs commands, and integrates with your terminal, IDE, browser, and apps. This guide covers everything from the <a href="https://code.claude.com/docs" target="_blank">official documentation</a> so you can start using it today.</p>
+  <div class="badges">
+    <span class="badge"><i class="fas fa-terminal"></i> Terminal</span>
+    <span class="badge"><i class="fas fa-code"></i> VS Code</span>
+    <span class="badge"><i class="fab fa-java"></i> JetBrains</span>
+    <span class="badge"><i class="fas fa-desktop"></i> Desktop</span>
+    <span class="badge"><i class="fas fa-globe"></i> Browser</span>
+    <span class="badge"><i class="fab fa-github"></i> GitHub Actions</span>
+    <span class="badge"><i class="fab fa-slack"></i> Slack</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- OVERVIEW -->
+<!-- ============================================================ -->
+<section class="sec" id="overview">
+  <div class="sec-head"><div class="sec-ico o"><i class="fas fa-compass"></i></div><div><h2>Overview</h2><p class="sub">What Claude Code is and why we use it</p></div></div>
+
+  <p>Claude Code is an agentic coding tool that reads your codebase, edits files, and runs commands. It works in your terminal, IDE, browser, and as a desktop app. Unlike simple code completion, Claude Code operates in an <strong>agentic loop</strong> — it gathers context, plans, acts, and verifies its own work.</p>
+
+  <h3>Why Our Team Uses Claude Code</h3>
+  <div class="cgrid">
+    <div class="mc"><div class="mc-i">⚡</div><h4>Ship Faster</h4><p>Automate boilerplate, test writing, and code gen. Ship features in hours, not days.</p></div>
+    <div class="mc"><div class="mc-i">🔁</div><h4>Git Automation</h4><p>Commits, branches, PRs, code reviews — all through natural language.</p></div>
+    <div class="mc"><div class="mc-i">🧪</div><h4>Auto Testing</h4><p>Generate tests, run them, fix failures, and iterate until they pass.</p></div>
+    <div class="mc"><div class="mc-i">🐛</div><h4>Bug Fixing</h4><p>Analyze stack traces, find root causes, and apply targeted fixes.</p></div>
+    <div class="mc"><div class="mc-i">📝</div><h4>Documentation</h4><p>Auto-generate JSDoc, README updates, and release notes.</p></div>
+    <div class="mc"><div class="mc-i">🤝</div><h4>Team Standards</h4><p>CLAUDE.md shares conventions across all sessions and team members.</p></div>
+  </div>
+
+  <h3>What You Can Do</h3>
+  <ul class="fl">
+    <li><i class="fas fa-chevron-right"></i><div><strong>Ask questions about your codebase</strong> — "How does our auth middleware work?"</div></li>
+    <li><i class="fas fa-chevron-right"></i><div><strong>Edit code across multiple files</strong> — "Add input validation to the signup form"</div></li>
+    <li><i class="fas fa-chevron-right"></i><div><strong>Run and fix tests</strong> — "Write tests for the cart service and fix any failures"</div></li>
+    <li><i class="fas fa-chevron-right"></i><div><strong>Search and navigate</strong> — "Find all API endpoints that don't have auth checks"</div></li>
+    <li><i class="fas fa-chevron-right"></i><div><strong>Git operations</strong> — "Commit these changes, create a PR with a clear description"</div></li>
+    <li><i class="fas fa-chevron-right"></i><div><strong>Automate CI workflows</strong> — Use in GitHub Actions for automated code reviews</div></li>
+    <li><i class="fas fa-chevron-right"></i><div><strong>Connect external tools</strong> — Jira, Slack, databases via MCP protocol</div></li>
+  </ul>
+
+  <h3>Platforms at a Glance</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Platform</th><th>Best For</th><th>Key Features</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Terminal CLI</strong></td><td>Full control, scripting</td><td>All features, composable with Unix tools</td></tr>
+        <tr><td><strong>VS Code</strong></td><td>IDE workflow</td><td>Inline diffs, @-mentions, plan review</td></tr>
+        <tr><td><strong>JetBrains</strong></td><td>IntelliJ/PyCharm users</td><td>Interactive diffs, context sharing</td></tr>
+        <tr><td><strong>Desktop App</strong></td><td>Visual review, parallel work</td><td>Side-by-side sessions, visual diffs</td></tr>
+        <tr><td><strong>Web</strong></td><td>No local setup, mobile</td><td>Cloud sandboxed, long-running tasks</td></tr>
+        <tr><td><strong>GitHub Actions</strong></td><td>CI/CD automation</td><td>Automated PR review, code gen</td></tr>
+        <tr><td><strong>Slack</strong></td><td>Team workflows</td><td>Route bugs to PRs from chat</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="co info"><i class="fas fa-info-circle"></i><div><strong>Subscription required.</strong> Claude Code requires a Pro ($20/mo), Max ($100/$200/mo), Team, or Enterprise plan. Alternatively, you can use an Anthropic Console account with API credits. The free tier does <em>not</em> include Claude Code.</div></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- QUICKSTART -->
+<!-- ============================================================ -->
+<section class="sec" id="quickstart">
+  <div class="sec-head"><div class="sec-ico b"><i class="fas fa-rocket"></i></div><div><h2>Quickstart</h2><p class="sub">From zero to running in 5 minutes</p></div></div>
+
+  <h3>System Requirements</h3>
+  <ul class="cl">
+    <li><strong>OS:</strong> macOS 13+, Windows 10 1809+, Ubuntu 20.04+, Debian 10+</li>
+    <li><strong>Hardware:</strong> 4 GB+ RAM</li>
+    <li><strong>Network:</strong> Internet connection required</li>
+    <li><strong>Shell:</strong> bash, zsh, or PowerShell recommended</li>
+  </ul>
+
+  <h3>Step-by-Step Setup</h3>
+  <div class="steps">
+    <div class="stp"><h4>Create your account</h4><p>Go to <a href="https://claude.ai" target="_blank">claude.ai</a> and sign up (or sign in). Upgrade to <strong>Pro</strong> ($20/mo) or <strong>Max</strong> ($100 or $200/mo) under Settings → Billing.</p></div>
+    <div class="stp"><h4>Install Claude Code</h4>
+      <div class="tabs">
+        <button class="tab-btn on" data-t="q-mac">macOS / Linux</button>
+        <button class="tab-btn" data-t="q-win">Windows</button>
+        <button class="tab-btn" data-t="q-brew">Homebrew</button>
+        <button class="tab-btn" data-t="q-npm">npm</button>
+      </div>
+      <div class="tab-p on" id="q-mac">
+        <div class="cb"><div class="cb-h"><span class="cb-l">bash</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>curl -fsSL https://claude.ai/install.sh | bash</code></pre></div>
+      </div>
+      <div class="tab-p" id="q-win">
+        <div class="cb"><div class="cb-h"><span class="cb-l">powershell</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code># PowerShell
+irm https://claude.ai/install.ps1 | iex
+
+# Or CMD
+curl -fsSL https://claude.ai/install.cmd -o install.cmd &amp;&amp; install.cmd &amp;&amp; del install.cmd
+
+# Or WinGet
+winget install Anthropic.ClaudeCode</code></pre></div>
+      </div>
+      <div class="tab-p" id="q-brew">
+        <div class="cb"><div class="cb-h"><span class="cb-l">bash</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>brew install --cask claude-code</code></pre></div>
+        <p style="font-size:13px;color:var(--t3)">Note: Homebrew installs require manual updates via <code>brew upgrade claude-code</code></p>
+      </div>
+      <div class="tab-p" id="q-npm">
+        <div class="cb"><div class="cb-h"><span class="cb-l">bash</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code># Requires Node.js 18+
+npm install -g @anthropic-ai/claude-code</code></pre></div>
+        <p style="font-size:13px;color:var(--t3)">NPM installation is deprecated. Prefer the native installer which auto-updates.</p>
+      </div>
+    </div>
+    <div class="stp"><h4>Navigate to your project and start</h4>
+      <div class="cb"><div class="cb-h"><span class="cb-l">bash</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>cd your-project
+claude</code></pre></div>
+    </div>
+    <div class="stp"><h4>Authenticate</h4><p>On first run, Claude opens your browser for login. Sign in with your Anthropic account. Back in the terminal, you'll be asked to trust the project directory. Accept to proceed.</p></div>
+    <div class="stp"><h4>Start coding</h4>
+      <div class="cb"><div class="cb-h"><span class="cb-l">bash</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code># Ask about your project
+&gt; summarize this codebase and explain the architecture
+
+# Make changes
+&gt; add input validation to the signup form in src/components/Signup.tsx
+
+# Run tests
+&gt; run the test suite and fix any failures</code></pre></div>
+    </div>
+  </div>
+
+  <div class="co tip"><i class="fas fa-lightbulb"></i><div>Claude respects <code>.gitignore</code> and never sends ignored files. It reads your project structure to understand context.</div></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- HOW IT WORKS -->
+<!-- ============================================================ -->
+<section class="sec" id="how-it-works">
+  <div class="sec-head"><div class="sec-ico g"><i class="fas fa-cogs"></i></div><div><h2>How Claude Code Works</h2><p class="sub">The agentic loop and available tools</p></div></div>
+
+  <p>Claude Code operates through an intelligent <strong>three-phase agentic loop</strong> that adapts to your task. Unlike traditional code assistants that generate one-shot responses, Claude gathers context, acts, and verifies its own work — iterating until the task is complete.</p>
+
+  <div class="cgrid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="mc" style="border-top:3px solid var(--blue)"><div class="mc-i">🔍</div><h4>1. Gather Context</h4><p>Read/search files, analyze errors, review git state, load CLAUDE.md instructions</p></div>
+    <div class="mc" style="border-top:3px solid var(--accent)"><div class="mc-i">⚡</div><h4>2. Take Action</h4><p>Edit files, run commands, execute git operations, invoke external tools via MCP</p></div>
+    <div class="mc" style="border-top:3px solid var(--green)"><div class="mc-i">✅</div><h4>3. Verify Results</h4><p>Run tests, analyze output, course-correct, iterate until the task is complete</p></div>
+  </div>
+
+  <h3>Available Tools</h3>
+  <p>Claude has access to these tools during a session:</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Tool</th><th>What It Does</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Read</strong></td><td>Read file contents with line-level precision</td></tr>
+        <tr><td><strong>Write / Edit</strong></td><td>Create new files or make targeted edits to existing files</td></tr>
+        <tr><td><strong>Glob</strong></td><td>Find files by pattern (e.g., <code>**/*.tsx</code>)</td></tr>
+        <tr><td><strong>Grep</strong></td><td>Search file contents with regex</td></tr>
+        <tr><td><strong>Bash</strong></td><td>Execute shell commands (builds, tests, git, etc.)</td></tr>
+        <tr><td><strong>Task (Subagent)</strong></td><td>Spawn sub-agents for parallel work</td></tr>
+        <tr><td><strong>WebSearch</strong></td><td>Search the web for documentation and solutions</td></tr>
+        <tr><td><strong>WebFetch</strong></td><td>Fetch and process web page content</td></tr>
+        <tr><td><strong>MCP Tools</strong></td><td>External integrations (Jira, Slack, databases, etc.)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Context Management</h3>
+  <p>Claude has a <strong>context window</strong> — a limit on how much information it can hold at once. As conversations grow long:</p>
+  <ul class="cl">
+    <li>Older tool outputs are automatically compressed first</li>
+    <li>Conversation history gets summarized if needed</li>
+    <li>CLAUDE.md instructions and important context are preserved</li>
+    <li>Use <code>/compact</code> to manually compress the conversation</li>
+    <li>Use <code>/clear</code> to reset and start fresh between unrelated tasks</li>
+  </ul>
+
+  <h3>Permission System</h3>
+  <p>Claude asks for your approval before performing potentially impactful actions. You can configure the level of autonomy:</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Mode</th><th>Behavior</th><th>Activate</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Normal</strong> (default)</td><td>Asks before file edits and shell commands</td><td>Default</td></tr>
+        <tr><td><strong>Auto-Accept Edits</strong></td><td>Edits files silently, asks for shell commands</td><td><code>Shift+Tab</code></td></tr>
+        <tr><td><strong>Plan Mode</strong></td><td>Read-only analysis, creates a plan for your approval</td><td><code>Shift+Tab</code> ×2</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Toggle between modes with <code>Shift+Tab</code> during a session, or start with <code>claude --permission-mode plan</code>.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- COMMON WORKFLOWS -->
+<!-- ============================================================ -->
+<section class="sec" id="common-workflows">
+  <div class="sec-head"><div class="sec-ico p"><i class="fas fa-code-branch"></i></div><div><h2>Common Workflows</h2><p class="sub">How to use Claude Code for everyday tasks</p></div></div>
+
+  <h3>Explore → Plan → Code → Commit</h3>
+  <p>The officially recommended workflow for non-trivial tasks:</p>
+  <div class="steps">
+    <div class="stp"><h4>Explore (Plan Mode)</h4><p>Start with <code>Shift+Tab</code> to enter Plan Mode. Ask Claude to read and understand the relevant code before making changes.</p>
+      <div class="cb"><div class="cb-h"><span class="cb-l">prompt</span></div><pre><code>&gt; read src/auth/ and explain how session handling works</code></pre></div>
+    </div>
+    <div class="stp"><h4>Plan</h4><p>Ask for a detailed implementation plan. Review it, adjust if needed.</p>
+      <div class="cb"><div class="cb-h"><span class="cb-l">prompt</span></div><pre><code>&gt; create a plan to add OAuth2 support using the existing auth patterns</code></pre></div>
+    </div>
+    <div class="stp"><h4>Implement</h4><p>Switch back to Normal Mode (<code>Shift+Tab</code>) and let Claude execute the plan.</p>
+      <div class="cb"><div class="cb-h"><span class="cb-l">prompt</span></div><pre><code>&gt; implement the plan. write tests and run them after each change</code></pre></div>
+    </div>
+    <div class="stp"><h4>Commit</h4>
+      <div class="cb"><div class="cb-h"><span class="cb-l">prompt</span></div><pre><code>&gt; commit the changes with a descriptive message and create a PR</code></pre></div>
+    </div>
+  </div>
+
+  <h3>Understand a Codebase</h3>
+  <div class="cb"><div class="cb-h"><span class="cb-l">prompts</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>&gt; give me an overview of this codebase
+&gt; explain the main architecture patterns
+&gt; what are the key data models?
+&gt; how does authentication work?
+&gt; trace the flow from a user clicking "Buy" to the order being saved</code></pre></div>
+
+  <h3>Fix Bugs</h3>
+  <div class="cb"><div class="cb-h"><span class="cb-l">prompts</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>&gt; the login form throws a TypeError when email is empty - find and fix it
+&gt; users report a blank screen after failed login. check token refresh in src/auth/
+&gt; fix the race condition in the checkout flow where inventory isn't checked before payment</code></pre></div>
+
+  <h3>Write and Fix Tests</h3>
+  <div class="cb"><div class="cb-h"><span class="cb-l">prompts</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>&gt; write comprehensive tests for the CartService class, aim for &gt;90% coverage
+&gt; find untested functions in the notification module and add edge case tests
+&gt; run the test suite and fix all failures</code></pre></div>
+
+  <h3>Refactor Code</h3>
+  <div class="cb"><div class="cb-h"><span class="cb-l">prompts</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>&gt; refactor fetchUserData to use async/await instead of .then() chains
+&gt; migrate our Express routes from JavaScript to TypeScript with proper type definitions
+&gt; find deprecated API usage across the project and suggest modern alternatives</code></pre></div>
+
+  <h3>Git & PRs</h3>
+  <div class="cb"><div class="cb-h"><span class="cb-l">prompts</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>&gt; commit my changes with a descriptive message
+&gt; create a new branch called feature/oauth2
+&gt; create a PR with a summary of what changed and why
+&gt; help me resolve the merge conflicts in src/api/users.ts</code></pre></div>
+
+  <h3>Pipe & Script (Headless)</h3>
+  <div class="cb"><div class="cb-h"><span class="cb-l">bash</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code># One-shot query (non-interactive)
+claude -p "summarize this project"
+
+# Process piped content
+git diff main...feature | claude -p "review these changes for bugs and security issues"
+
+# Structured output
+claude -p "list all API endpoints" --output-format json &gt; endpoints.json
+
+# Stream output
+cat error.log | claude -p "parse errors and suggest fixes" --output-format stream-json</code></pre></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- BEST PRACTICES -->
+<!-- ============================================================ -->
+<section class="sec" id="best-practices">
+  <div class="sec-head"><div class="sec-ico y"><i class="fas fa-star"></i></div><div><h2>Best Practices</h2><p class="sub">Get the most out of Claude Code</p></div></div>
+
+  <h3>Write Effective Prompts</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Strategy</th><th style="color:var(--red)">❌ Before</th><th style="color:var(--green)">✓ After</th></tr></thead>
+      <tbody>
+        <tr><td>Be specific</td><td>"fix the bugs"</td><td>"fix the null pointer in UserService.getProfile() when user.email is undefined"</td></tr>
+        <tr><td>Point to sources</td><td>"why is the API weird?"</td><td>"look through the git history of ExecutionFactory and explain the design decisions"</td></tr>
+        <tr><td>Reference patterns</td><td>"add a calendar widget"</td><td>"look at HotDogWidget.php as a reference pattern and implement a CalendarWidget similarly"</td></tr>
+        <tr><td>Include verification</td><td>"write a validator"</td><td>"write validateEmail. test: user@example.com=true, invalid=false, user@.com=false. run tests after"</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Context Management</h3>
+  <div class="card"><div class="card-t"><i class="fas fa-brain"></i> Your most important resource</div>
+    <p>The context window fills fast and performance degrades when it's overloaded. Keep it clean:</p>
+    <ul class="cl">
+      <li>Use <code>/clear</code> between unrelated tasks</li>
+      <li>Use <code>/compact</code> to compress long conversations</li>
+      <li>Run <code>/clear</code> after 2+ failed correction attempts — start fresh with a better prompt</li>
+      <li>Use subagents for exploratory work (they get separate context)</li>
+      <li>Put persistent rules in <code>CLAUDE.md</code>, not in conversation</li>
+      <li>Track context usage with <code>/context</code></li>
+    </ul>
+  </div>
+
+  <h3>Always Use Version Control</h3>
+  <div class="cb"><div class="cb-h"><span class="cb-l">bash</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code># Create a branch before big changes
+git checkout -b claude/add-auth-module
+claude "implement JWT authentication middleware"
+# Review changes, then merge when satisfied</code></pre></div>
+
+  <h3>Review Everything</h3>
+  <p>Claude is powerful but not perfect. Always check for:</p>
+  <ul class="cl">
+    <li>Logic errors or incorrect assumptions</li>
+    <li>Security vulnerabilities (SQL injection, XSS, hardcoded secrets)</li>
+    <li>Performance issues (N+1 queries, unnecessary loops)</li>
+    <li>Adherence to your team's conventions</li>
+  </ul>
+
+  <h3>Pitfalls to Avoid</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th style="color:var(--red)">Pitfall</th><th style="color:var(--green)">Fix</th></tr></thead>
+      <tbody>
+        <tr><td>Kitchen-sink sessions (mixing unrelated tasks)</td><td><code>/clear</code> between different tasks</td></tr>
+        <tr><td>Correcting Claude repeatedly (context gets muddled)</td><td><code>/clear</code> and rewrite a better initial prompt</td></tr>
+        <tr><td>Over-specified CLAUDE.md</td><td>Keep it short — less is more. Prune ruthlessly</td></tr>
+        <tr><td>Trust-then-verify gap</td><td>Always include tests or screenshots as verification</td></tr>
+        <tr><td>Infinite exploration</td><td>Scope tasks narrowly or use subagents</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="co warn"><i class="fas fa-exclamation-triangle"></i><div><strong>Security:</strong> Be cautious about prompt injection. Don't paste untrusted content directly into Claude without reviewing it. Claude has built-in protections, but awareness is key.</div></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CLAUDE.MD -->
+<!-- ============================================================ -->
+<section class="sec" id="claude-md">
+  <div class="sec-head"><div class="sec-ico o"><i class="fas fa-file-alt"></i></div><div><h2>CLAUDE.md</h2><p class="sub">Project memory and team standards</p></div></div>
+
+  <p>CLAUDE.md is a markdown file that Claude reads at the start of every session. It's your way to give Claude persistent context about your project, coding standards, and preferences. Run <code>/init</code> to create one.</p>
+
+  <h3>Where to Put It</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Location</th><th>Scope</th><th>Git</th></tr></thead>
+      <tbody>
+        <tr><td><code>~/.claude/CLAUDE.md</code></td><td>Global — all projects, all sessions</td><td>Not in git</td></tr>
+        <tr><td><code>./CLAUDE.md</code></td><td>Project — shared with team</td><td>Check into git</td></tr>
+        <tr><td><code>./CLAUDE.local.md</code></td><td>Personal project prefs</td><td>Add to .gitignore</td></tr>
+        <tr><td><code>./src/CLAUDE.md</code></td><td>Subdirectory — auto-loaded for that folder</td><td>Check into git</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>What to Include</h3>
+  <div class="cb"><div class="cb-h"><span class="cb-l">markdown</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code># CLAUDE.md
+
+## Tech Stack
+- TypeScript strict mode, React 18, Next.js 14
+- Tailwind CSS for styling
+- Vitest for testing (not Jest)
+- pnpm (not npm or yarn)
+
+## Code Style
+- ES modules (import/export), not CommonJS
+- Functional components with hooks
+- Destructured imports: `import { foo } from 'bar'`
+- Keep components under 200 lines
+
+## Commands
+- Build: `pnpm build`
+- Test: `pnpm test`
+- Lint: `pnpm lint`
+- Type check: `pnpm typecheck`
+
+## Architecture
+- API routes in src/api/
+- Components in src/components/
+- Business logic in src/services/
+- All DB access through Prisma ORM
+
+## Conventions
+- Branch naming: feature/*, bugfix/*, hotfix/*
+- Commit messages: conventional commits (feat:, fix:, refactor:)
+- PR descriptions must include "What" and "Why" sections</code></pre></div>
+
+  <h3>What NOT to Include</h3>
+  <ul class="cl">
+    <li>Standard language conventions (Claude already knows them)</li>
+    <li>Full API documentation (link to it instead)</li>
+    <li>Things that change frequently (version numbers, etc.)</li>
+    <li>Self-evident practices ("write clean code")</li>
+  </ul>
+  <div class="co tip"><i class="fas fa-lightbulb"></i><div>Keep your CLAUDE.md concise. Long files waste context tokens every session. Aim for under 100 lines.</div></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- TERMINAL (CLI) -->
+<!-- ============================================================ -->
+<section class="sec" id="terminal">
+  <div class="sec-head"><div class="sec-ico b"><i class="fas fa-terminal"></i></div><div><h2>Terminal (CLI)</h2><p class="sub">The full-featured command-line interface</p></div></div>
+
+  <p>The terminal is the most powerful way to use Claude Code. It supports all features, is composable with Unix tools, and gives you full control.</p>
+
+  <h3>Starting a Session</h3>
+  <div class="cb"><div class="cb-h"><span class="cb-l">bash</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>claude                     # Interactive session
+claude "task description"  # Start with a task
+claude -p "query"          # One-shot (print mode), then exit
+claude -c                  # Continue most recent conversation
+claude -r                  # Resume a specific session (interactive picker)
+claude -r auth-refactor    # Resume by session name</code></pre></div>
+
+  <h3>Interactive Commands</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Command</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>/help</code></td><td>Show all commands and keyboard shortcuts</td></tr>
+        <tr><td><code>/compact</code></td><td>Compress conversation to save context</td></tr>
+        <tr><td><code>/clear</code></td><td>Reset conversation — start fresh</td></tr>
+        <tr><td><code>/model</code></td><td>Switch model mid-session (Sonnet, Opus, Haiku)</td></tr>
+        <tr><td><code>/context</code></td><td>Check context window usage</td></tr>
+        <tr><td><code>/commit</code></td><td>Create a well-formatted git commit</td></tr>
+        <tr><td><code>/review-pr</code></td><td>Review a pull request</td></tr>
+        <tr><td><code>/init</code></td><td>Generate a CLAUDE.md for the project</td></tr>
+        <tr><td><code>/login</code></td><td>Switch accounts</td></tr>
+        <tr><td><code>/doctor</code></td><td>Diagnose installation issues</td></tr>
+        <tr><td><code>/config</code></td><td>Open settings interface</td></tr>
+        <tr><td><code>/hooks</code></td><td>Configure automation hooks</td></tr>
+        <tr><td><code>/skills</code></td><td>List available skills</td></tr>
+        <tr><td><code>/agents</code></td><td>Configure subagents</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Keyboard Shortcuts</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><code>Shift+Tab</code></td><td>Cycle permission modes (Normal → Auto-Accept → Plan)</td></tr>
+        <tr><td><code>Esc</code></td><td>Interrupt current action</td></tr>
+        <tr><td><code>Esc Esc</code></td><td>Rewind to last checkpoint (undo changes)</td></tr>
+        <tr><td><code>Ctrl+C</code></td><td>Cancel / exit</td></tr>
+        <tr><td><code>?</code></td><td>Show all keyboard shortcuts</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- VS CODE -->
+<!-- ============================================================ -->
+<section class="sec" id="vscode">
+  <div class="sec-head"><div class="sec-ico b"><i class="fas fa-code"></i></div><div><h2>VS Code Integration</h2><p class="sub">Full IDE integration with inline diffs</p></div></div>
+
+  <p>Search for <strong>"Claude Code"</strong> in the Extensions marketplace (<code>Ctrl+Shift+X</code>) and install. Requires VS Code 1.98.0+.</p>
+
+  <h3>Opening Claude</h3>
+  <ul class="cl">
+    <li><strong>Spark icon</strong> — in the editor toolbar (top-right)</li>
+    <li><strong>Status bar</strong> — click "✱ Claude Code" at the bottom-right</li>
+    <li><strong>Command Palette</strong> — <code>Ctrl+Shift+P</code> → "Claude Code"</li>
+  </ul>
+
+  <h3>Key Shortcuts</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><code>Alt+K</code> / <code>Option+K</code></td><td>Insert @-mention (reference a file)</td></tr>
+        <tr><td><code>Ctrl+Esc</code> / <code>Cmd+Esc</code></td><td>Toggle focus between editor and Claude</td></tr>
+        <tr><td><code>Ctrl+Shift+Esc</code></td><td>Open Claude in a new editor tab</td></tr>
+        <tr><td><code>Ctrl+N</code> / <code>Cmd+N</code></td><td>New conversation</td></tr>
+        <tr><td><code>Shift+Tab</code></td><td>Cycle permission modes</td></tr>
+        <tr><td><code>Shift+Enter</code></td><td>New line in prompt box</td></tr>
+        <tr><td><code>Alt+T</code> / <code>Option+T</code></td><td>Toggle extended thinking</td></tr>
+        <tr><td><code>/</code></td><td>Open command menu</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Features</h3>
+  <ul class="cl">
+    <li><strong>Inline diffs</strong> — review every code change before accepting</li>
+    <li><strong>@-mentions</strong> — <code>@filename</code> for files, <code>@folder/</code> for directories, <code>@terminal:name</code> for terminal output</li>
+    <li><strong>Checkpoints</strong> — hover over messages to rewind code and conversation</li>
+    <li><strong>Plan Mode</strong> — analyze safely before committing to changes</li>
+    <li><strong>Shared history</strong> — extension and CLI share conversation history</li>
+    <li><strong>Drag & drop</strong> — drag files into chat as context</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<!-- JETBRAINS -->
+<!-- ============================================================ -->
+<section class="sec" id="jetbrains">
+  <div class="sec-head"><div class="sec-ico p"><i class="fab fa-java"></i></div><div><h2>JetBrains IDEs</h2><p class="sub">IntelliJ, PyCharm, WebStorm, and more</p></div></div>
+
+  <p>Install the <strong>Claude Code</strong> plugin from the JetBrains Marketplace. Supports IntelliJ IDEA, PyCharm, WebStorm, GoLand, PHPStorm, and others.</p>
+  <ul class="cl">
+    <li>Interactive diffs for reviewing code changes</li>
+    <li>Context sharing with the IDE</li>
+    <li>Same command set as the CLI (<code>/compact</code>, <code>/clear</code>, etc.)</li>
+    <li>Permission mode cycling with <code>Shift+Tab</code></li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<!-- DESKTOP APP -->
+<!-- ============================================================ -->
+<section class="sec" id="desktop">
+  <div class="sec-head"><div class="sec-ico o"><i class="fas fa-desktop"></i></div><div><h2>Desktop App</h2><p class="sub">Visual interface with parallel sessions</p></div></div>
+
+  <p>Download from <a href="https://claude.ai/download" target="_blank">claude.ai/download</a> for macOS (Intel/Apple Silicon) or Windows (x64, ARM64).</p>
+  <ul class="cl">
+    <li>Side-by-side parallel sessions with separate git worktrees</li>
+    <li>Visual diffs for reviewing changes</li>
+    <li>All the same agentic capabilities as the terminal</li>
+    <li>Use <code>/desktop</code> in CLI to hand off a session to the desktop app</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<!-- WEB -->
+<!-- ============================================================ -->
+<section class="sec" id="web">
+  <div class="sec-head"><div class="sec-ico g"><i class="fas fa-globe"></i></div><div><h2>Claude Code on the Web</h2><p class="sub">No install required, cloud-sandboxed</p></div></div>
+
+  <p>Go to <a href="https://claude.ai/code" target="_blank">claude.ai/code</a> and sign in. No local setup needed.</p>
+  <ul class="cl">
+    <li>Full agentic coding in a sandboxed cloud environment</li>
+    <li>Connect to GitHub repos directly</li>
+    <li>Long-running tasks continue even if you close the browser</li>
+    <li>Works on mobile — check progress from anywhere</li>
+    <li>Use <code>/teleport</code> in CLI to pull a cloud session to your terminal</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<!-- MCP -->
+<!-- ============================================================ -->
+<section class="sec" id="mcp">
+  <div class="sec-head"><div class="sec-ico c"><i class="fas fa-plug"></i></div><div><h2>Model Context Protocol (MCP)</h2><p class="sub">Connect Claude to external tools and services</p></div></div>
+
+  <p>MCP lets Claude Code communicate with external tools — databases, APIs, project management tools, and more. Think of it as a plugin system.</p>
+
+  <h3>Adding MCP Servers</h3>
+  <div class="cb"><div class="cb-h"><span class="cb-l">bash</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code># Add a server
+claude mcp add --transport http github https://api.githubcopilot.com/mcp/
+
+# Add a stdio server
+claude mcp add my-server -- node /path/to/server.js
+
+# List configured servers
+claude mcp list
+
+# Remove a server
+claude mcp remove my-server</code></pre></div>
+
+  <h3>Popular Integrations</h3>
+  <div class="cgrid">
+    <div class="mc"><div class="mc-i">📋</div><h4>Jira / Linear</h4><p>Read and update tickets from within Claude</p></div>
+    <div class="mc"><div class="mc-i">💬</div><h4>Slack</h4><p>Send messages and read channel context</p></div>
+    <div class="mc"><div class="mc-i">🗄️</div><h4>Databases</h4><p>Query Postgres, MySQL, SQLite directly</p></div>
+    <div class="mc"><div class="mc-i">📁</div><h4>Google Drive</h4><p>Read docs and spreadsheets as context</p></div>
+    <div class="mc"><div class="mc-i">🎨</div><h4>Figma</h4><p>Read design files and translate to code</p></div>
+    <div class="mc"><div class="mc-i">📊</div><h4>Monitoring</h4><p>Connect to Sentry, Datadog, etc.</p></div>
+  </div>
+
+  <div class="co info"><i class="fas fa-info-circle"></i><div>MCP servers consume context tokens. Be mindful of how many you have active simultaneously.</div></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- HOOKS -->
+<!-- ============================================================ -->
+<section class="sec" id="hooks">
+  <div class="sec-head"><div class="sec-ico y"><i class="fas fa-bolt"></i></div><div><h2>Hooks</h2><p class="sub">Automate actions before or after Claude acts</p></div></div>
+
+  <p>Hooks run deterministic commands at specific points in Claude's workflow — like linting after edits or blocking changes to certain directories.</p>
+
+  <h3>Configuring Hooks</h3>
+  <p>Run <code>/hooks</code> in a session, or configure in <code>.claude/settings.json</code>:</p>
+  <div class="cb"><div class="cb-h"><span class="cb-l">json</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>{
+  "hooks": {
+    "afterEdit": [
+      { "command": "eslint --fix $FILE", "description": "Auto-fix lint issues" }
+    ],
+    "beforeCommit": [
+      { "command": "pnpm typecheck", "description": "Type-check before committing" }
+    ]
+  }
+}</code></pre></div>
+
+  <h3>Available Hook Points</h3>
+  <ul class="cl">
+    <li><strong>afterEdit</strong> — runs after any file is modified</li>
+    <li><strong>beforeCommit</strong> — runs before git commits</li>
+    <li><strong>afterCommit</strong> — runs after git commits</li>
+    <li><strong>onSessionStart</strong> — runs when a session begins</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<!-- SKILLS -->
+<!-- ============================================================ -->
+<section class="sec" id="skills">
+  <div class="sec-head"><div class="sec-ico g"><i class="fas fa-magic"></i></div><div><h2>Skills</h2><p class="sub">Reusable slash commands for common workflows</p></div></div>
+
+  <p>Skills are custom slash commands you create for repeatable workflows. They live in <code>.claude/skills/</code>.</p>
+
+  <div class="cb"><div class="cb-h"><span class="cb-l">.claude/skills/review-pr/SKILL.md</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>---
+name: review-pr
+description: Review a PR with our team's checklist
+---
+
+# PR Review Workflow
+1. Read all changed files
+2. Check for security issues (SQL injection, XSS, auth bypass)
+3. Check for performance issues (N+1 queries, missing indexes)
+4. Verify tests exist for new functionality
+5. Check adherence to our code style (see CLAUDE.md)
+6. Write a structured review comment</code></pre></div>
+
+  <p>Then use it in any session with <code>/review-pr</code>. Run <code>/skills</code> to see all available skills.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SUBAGENTS -->
+<!-- ============================================================ -->
+<section class="sec" id="subagents">
+  <div class="sec-head"><div class="sec-ico p"><i class="fas fa-users-cog"></i></div><div><h2>Subagents</h2><p class="sub">Specialized AI assistants within a session</p></div></div>
+
+  <p>Subagents are specialized assistants that run in their own context window with specific tools and permissions. They help you:</p>
+  <ul class="cl">
+    <li><strong>Preserve context</strong> — keep exploration out of your main conversation</li>
+    <li><strong>Enforce constraints</strong> — limit which tools a subagent can use</li>
+    <li><strong>Reuse configs</strong> — same subagent across projects</li>
+    <li><strong>Specialize</strong> — dedicated agents for testing, docs, security review</li>
+    <li><strong>Control costs</strong> — route tasks to faster, cheaper models like Haiku</li>
+  </ul>
+
+  <h3>Creating a Subagent</h3>
+  <div class="cb"><div class="cb-h"><span class="cb-l">.claude/agents/security-reviewer.md</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>---
+name: security-reviewer
+description: Review code for security vulnerabilities
+model: sonnet
+tools:
+  - Read
+  - Grep
+  - Glob
+---
+
+You are a security-focused code reviewer. Analyze code for:
+- SQL injection, XSS, CSRF vulnerabilities
+- Authentication and authorization issues
+- Hardcoded secrets or credentials
+- Insecure dependencies</code></pre></div>
+
+  <p>Use <code>/agents</code> to manage subagents. Claude automatically delegates when a task matches a subagent's description.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- AGENT TEAMS -->
+<!-- ============================================================ -->
+<section class="sec" id="agent-teams">
+  <div class="sec-head"><div class="sec-ico c"><i class="fas fa-people-arrows"></i></div><div><h2>Agent Teams</h2><p class="sub">Multiple agents working in parallel</p></div></div>
+
+  <p>While subagents work within a single session, <strong>agent teams</strong> coordinate across separate sessions. A lead agent distributes work and merges results.</p>
+
+  <ul class="cl">
+    <li>Parallel processing — multiple agents work on different parts simultaneously</li>
+    <li>Separate git worktrees — each agent works in isolation</li>
+    <li>Lead agent coordinates — distributes tasks, reviews output, merges</li>
+    <li>Useful for large refactors, multi-service changes, comprehensive testing</li>
+  </ul>
+
+  <div class="co info"><i class="fas fa-info-circle"></i><div>Agent teams are best for tasks that are naturally parallelizable. For sequential tasks, use regular sessions or subagents instead.</div></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SETTINGS -->
+<!-- ============================================================ -->
+<section class="sec" id="settings">
+  <div class="sec-head"><div class="sec-ico o"><i class="fas fa-sliders-h"></i></div><div><h2>Settings & Configuration</h2><p class="sub">Customize Claude Code behavior</p></div></div>
+
+  <p>Configure via <code>/config</code> in a session, or edit <code>.claude/settings.json</code> directly.</p>
+
+  <h3>Configuration Scopes</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Scope</th><th>Location</th><th>Use For</th></tr></thead>
+      <tbody>
+        <tr><td><strong>User</strong></td><td><code>~/.claude/settings.json</code></td><td>Personal preferences across all projects</td></tr>
+        <tr><td><strong>Project</strong></td><td><code>.claude/settings.json</code></td><td>Team settings, check into git</td></tr>
+        <tr><td><strong>Local</strong></td><td><code>.claude/settings.local.json</code></td><td>Personal project prefs, gitignored</td></tr>
+        <tr><td><strong>Enterprise</strong></td><td>Server-managed</td><td>Organization-wide policies</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Key Settings</h3>
+  <div class="cb"><div class="cb-h"><span class="cb-l">json</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Bash(git status)",
+      "Bash(pnpm lint)"
+    ]
+  },
+  "model": "sonnet",
+  "theme": "dark"
+}</code></pre></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PERMISSIONS -->
+<!-- ============================================================ -->
+<section class="sec" id="permissions">
+  <div class="sec-head"><div class="sec-ico g"><i class="fas fa-shield-alt"></i></div><div><h2>Permissions</h2><p class="sub">Control what Claude can and can't do</p></div></div>
+
+  <p>Claude asks permission before running commands or editing files. You can pre-approve safe commands:</p>
+
+  <div class="cb"><div class="cb-h"><span class="cb-l">.claude/settings.json</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Bash(npm run lint)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(pnpm *)",
+      "Read",
+      "Glob",
+      "Grep"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force *)"
+    ]
+  }
+}</code></pre></div>
+
+  <h3>Permission Modes</h3>
+  <p>Toggle with <code>Shift+Tab</code> or <code>--permission-mode</code> flag:</p>
+  <ul class="cl">
+    <li><strong>Normal:</strong> Ask for each edit and command</li>
+    <li><strong>Auto-Accept Edits:</strong> Edit files freely, ask for commands</li>
+    <li><strong>Plan Mode:</strong> Read-only. Creates a plan for approval before any changes</li>
+  </ul>
+
+  <div class="co danger"><i class="fas fa-exclamation-circle"></i><div><code>--dangerously-skip-permissions</code> bypasses all permission prompts. Only use this in sandboxed CI environments, never locally.</div></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECURITY -->
+<!-- ============================================================ -->
+<section class="sec" id="security">
+  <div class="sec-head"><div class="sec-ico y"><i class="fas fa-lock"></i></div><div><h2>Security</h2><p class="sub">Data privacy and safety</p></div></div>
+
+  <ul class="cl">
+    <li>Code context is sent to Anthropic's API for processing</li>
+    <li>Anthropic does <strong>not</strong> train on your code by default</li>
+    <li>Team and Enterprise plans have additional data privacy guarantees</li>
+    <li>Claude respects <code>.gitignore</code> — ignored files are never sent</li>
+    <li>Permission system prevents unauthorized destructive actions</li>
+    <li>Sandboxing available for OS-level isolation</li>
+    <li>All API communication is encrypted over HTTPS</li>
+  </ul>
+
+  <div class="co warn"><i class="fas fa-exclamation-triangle"></i><div><strong>Prompt injection:</strong> Be aware that content in files could attempt to manipulate Claude. Don't blindly paste untrusted content. Claude has protections but awareness helps.</div></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- MODELS -->
+<!-- ============================================================ -->
+<section class="sec" id="models">
+  <div class="sec-head"><div class="sec-ico p"><i class="fas fa-brain"></i></div><div><h2>Model Configuration</h2><p class="sub">Choose the right model for the task</p></div></div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Model</th><th>Best For</th><th>Speed</th><th>Usage Cost</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Sonnet</strong> (default)</td><td>Most coding tasks — good balance</td><td>Fast</td><td>Low</td></tr>
+        <tr><td><strong>Opus</strong></td><td>Complex reasoning, architecture</td><td>Slower</td><td>High</td></tr>
+        <tr><td><strong>Haiku</strong></td><td>Simple tasks, high volume</td><td>Fastest</td><td>Lowest</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cb"><div class="cb-h"><span class="cb-l">bash</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code># Start with a specific model
+claude --model opus
+
+# Switch mid-session
+/model sonnet
+
+# Extended thinking (Opus) — toggle on/off
+# Alt+T in VS Code, or Ctrl+O for verbose reasoning</code></pre></div>
+
+  <h3>Extended Thinking</h3>
+  <p>When enabled, Claude can "think" more deeply before responding — useful for complex architecture decisions and multi-file reasoning.</p>
+  <ul class="cl">
+    <li>Enabled by default for Opus</li>
+    <li>Toggle with <code>Alt+T</code> (VS Code) or <code>Option+T</code> (macOS)</li>
+    <li>Use <code>Ctrl+O</code> to see internal reasoning (verbose mode)</li>
+    <li>Disable with <code>export MAX_THINKING_TOKENS=0</code></li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<!-- CLI REFERENCE -->
+<!-- ============================================================ -->
+<section class="sec" id="cli-ref">
+  <div class="sec-head"><div class="sec-ico b"><i class="fas fa-hashtag"></i></div><div><h2>CLI Reference</h2><p class="sub">Complete command-line reference</p></div></div>
+
+  <h3>Commands</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Command</th><th>Description</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><code>claude</code></td><td>Start interactive REPL</td><td><code>claude</code></td></tr>
+        <tr><td><code>claude "query"</code></td><td>Start with initial prompt</td><td><code>claude "explain this project"</code></td></tr>
+        <tr><td><code>claude -p "query"</code></td><td>Print mode (non-interactive)</td><td><code>claude -p "list all TODO comments"</code></td></tr>
+        <tr><td><code>cat file | claude -p</code></td><td>Process piped content</td><td><code>cat log.txt | claude -p "parse errors"</code></td></tr>
+        <tr><td><code>claude -c</code></td><td>Continue most recent conversation</td><td><code>claude -c</code></td></tr>
+        <tr><td><code>claude -r "name"</code></td><td>Resume by session name/ID</td><td><code>claude -r auth-refactor</code></td></tr>
+        <tr><td><code>claude update</code></td><td>Update to latest version</td><td><code>claude update</code></td></tr>
+        <tr><td><code>claude mcp</code></td><td>Configure MCP servers</td><td><code>claude mcp list</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Flags</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>-p, --print</code></td><td>Print response without interactive mode</td></tr>
+        <tr><td><code>-c, --continue</code></td><td>Continue most recent conversation</td></tr>
+        <tr><td><code>-r, --resume</code></td><td>Resume a specific session by name or ID</td></tr>
+        <tr><td><code>--model &lt;name&gt;</code></td><td>Set model (sonnet, opus, haiku)</td></tr>
+        <tr><td><code>--permission-mode</code></td><td>Set mode (default, plan, acceptEdits)</td></tr>
+        <tr><td><code>--add-dir &lt;path&gt;</code></td><td>Add additional working directories</td></tr>
+        <tr><td><code>--tools &lt;list&gt;</code></td><td>Restrict available tools</td></tr>
+        <tr><td><code>--system-prompt</code></td><td>Replace the default system prompt</td></tr>
+        <tr><td><code>--append-system-prompt</code></td><td>Add to the default system prompt</td></tr>
+        <tr><td><code>--output-format</code></td><td>Output format: text, json, stream-json</td></tr>
+        <tr><td><code>--max-turns &lt;n&gt;</code></td><td>Limit number of agentic turns</td></tr>
+        <tr><td><code>--json-schema</code></td><td>Get validated structured JSON output</td></tr>
+        <tr><td><code>--verbose</code></td><td>Enable verbose logging</td></tr>
+        <tr><td><code>--debug &lt;categories&gt;</code></td><td>Debug mode (api, mcp, etc.)</td></tr>
+        <tr><td><code>--chrome</code></td><td>Enable Chrome browser automation</td></tr>
+        <tr><td><code>--session-id</code></td><td>Use a specific session ID</td></tr>
+        <tr><td><code>--init</code></td><td>Run initialization hooks on startup</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CHECKPOINTING -->
+<!-- ============================================================ -->
+<section class="sec" id="checkpointing">
+  <div class="sec-head"><div class="sec-ico g"><i class="fas fa-history"></i></div><div><h2>Checkpointing</h2><p class="sub">Undo anything — safely</p></div></div>
+
+  <p>Claude automatically creates checkpoints before making changes. You can rewind to any checkpoint to restore both code and conversation state.</p>
+
+  <h3>How to Rewind</h3>
+  <ul class="cl">
+    <li><strong>Terminal:</strong> Press <code>Esc</code> twice, or use <code>/rewind</code></li>
+    <li><strong>VS Code:</strong> Hover over a message and click the rewind icon</li>
+    <li>Rewind restores: code changes, conversation state, and file system</li>
+    <li>You can fork from a checkpoint to try a different approach</li>
+  </ul>
+
+  <div class="co tip"><i class="fas fa-lightbulb"></i><div>Checkpoints persist across sessions but are <strong>not a replacement for git</strong>. Always commit important work.</div></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- GITHUB ACTIONS -->
+<!-- ============================================================ -->
+<section class="sec" id="github-actions">
+  <div class="sec-head"><div class="sec-ico b"><i class="fab fa-github"></i></div><div><h2>GitHub Actions</h2><p class="sub">CI/CD automation with Claude Code</p></div></div>
+
+  <p>Use Claude Code in your GitHub Actions workflows for automated code reviews, PR generation, and more.</p>
+
+  <div class="cb"><div class="cb-h"><span class="cb-l">.github/workflows/claude-review.yml</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>name: Claude Code Review
+on: [pull_request]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Review this PR for:
+            - Bugs and logic errors
+            - Security vulnerabilities
+            - Performance issues
+            - Code style adherence
+            Provide specific, actionable feedback.</code></pre></div>
+
+  <div class="cb"><div class="cb-h"><span class="cb-l">Automated PR creation</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code>- uses: anthropics/claude-code-action@v1
+  with:
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    prompt: |
+      translate all new strings into French and raise a PR for review
+    mode: create-pr</code></pre></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SDK -->
+<!-- ============================================================ -->
+<section class="sec" id="sdk">
+  <div class="sec-head"><div class="sec-ico p"><i class="fas fa-cube"></i></div><div><h2>SDK & Programmatic Usage</h2><p class="sub">Build with Claude Code as a library</p></div></div>
+
+  <p>Use Claude Code programmatically for automated pipelines, custom integrations, and batch processing.</p>
+
+  <div class="cb"><div class="cb-h"><span class="cb-l">bash</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre><code># Headless mode — no interactive prompts
+claude -p "explain this function" --output-format text
+
+# JSON output for parsing
+claude -p "list all API endpoints with their HTTP methods" --output-format json
+
+# Structured output with schema validation
+claude -p "extract all TODO comments" --json-schema '{"type":"array","items":{"type":"object","properties":{"file":{"type":"string"},"line":{"type":"number"},"text":{"type":"string"}}}}'
+
+# Stream output for real-time processing
+cat access.log | claude -p "detect anomalies" --output-format stream-json
+
+# Combine with other tools
+git diff main --name-only | xargs -I{} claude -p "review {} for security issues" --output-format json</code></pre></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- TROUBLESHOOTING -->
+<!-- ============================================================ -->
+<section class="sec" id="troubleshooting">
+  <div class="sec-head"><div class="sec-ico y"><i class="fas fa-wrench"></i></div><div><h2>Troubleshooting</h2><p class="sub">Common issues and solutions</p></div></div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Issue</th><th>Solution</th></tr></thead>
+      <tbody>
+        <tr><td><code>command not found: claude</code></td><td>Reinstall, or add to PATH. Run <code>claude doctor</code> to diagnose.</td></tr>
+        <tr><td>Authentication failures</td><td>Run <code>/login</code> to re-authenticate. Check your subscription is active.</td></tr>
+        <tr><td>Slow responses</td><td>Use <code>/compact</code> to reduce context. Switch to Sonnet if on Opus.</td></tr>
+        <tr><td>Claude edits wrong files</td><td>Be more specific in prompts. Use @-mentions or <code>--add-file</code>.</td></tr>
+        <tr><td>Rate limit reached</td><td>Wait for reset (rolling window) or upgrade to Max plan.</td></tr>
+        <tr><td>Extension not loading</td><td>Update VS Code to 1.98.0+. Reinstall extension. Check <code>/doctor</code>.</td></tr>
+        <tr><td>Git conflicts with Claude changes</td><td>Use feature branches. Review diffs before accepting. Use checkpoints.</td></tr>
+        <tr><td>MCP server not connecting</td><td>Run <code>claude mcp list</code> to check config. Use <code>--debug mcp</code> flag.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="co tip"><i class="fas fa-lightbulb"></i><div>Run <code>claude --doctor</code> or <code>/doctor</code> in a session for automated diagnostics.</div></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SUPABASE INTEGRATION -->
+<!-- ============================================================ -->
+<section class="sec" id="supabase">
+  <div class="sec-head"><div class="sec-ico g"><i class="fas fa-database"></i></div><div><h2>Claude Code + Supabase Integration</h2><p class="sub">Complete guide with Agents, Commands, and MCP</p></div></div>
+
+  <p>This section is based on <a href="https://medium.com/@dan.avila7/claude-code-supabase-integration-complete-guide-with-agents-commands-and-mcp-427613d9051e" target="_blank">Daniel Avila's complete guide</a> for integrating Claude Code with Supabase using the <a href="https://github.com/davila7/claude-code-templates" target="_blank">claude-code-templates</a> CLI. The integration installs <strong>2 specialized agents</strong>, <strong>8 database commands</strong>, and an <strong>MCP server</strong> that turn Claude Code into a full-featured Supabase development environment.</p>
+
+  <div class="co info"><i class="fas fa-info-circle"></i><div>All components install automatically to standard Claude Code directories and are immediately available. No restart needed — Claude Code detects them instantly.</div></div>
+
+  <!-- WHAT'S INCLUDED -->
+  <h3><i class="fas fa-box-open" style="color:var(--accent);margin-right:6px;font-size:14px"></i>What's Included</h3>
+
+  <div class="cgrid">
+    <div class="mc"><div class="mc-i" style="color:var(--purple)"><i class="fas fa-robot"></i></div><h4>2 Agents</h4><p>Schema Architect &amp; Realtime Optimizer — specialized AI agents for database design and WebSocket tuning</p></div>
+    <div class="mc"><div class="mc-i" style="color:var(--blue)"><i class="fas fa-terminal"></i></div><h4>8 Commands</h4><p>Slash commands for schema sync, migrations, performance, security audits, backups, types, data explorer, and realtime monitoring</p></div>
+    <div class="mc"><div class="mc-i" style="color:var(--green)"><i class="fas fa-plug"></i></div><h4>1 MCP Server</h4><p>Direct Supabase API integration through Model Context Protocol for secure, controlled database access</p></div>
+  </div>
+
+  <!-- INSTALLATION -->
+  <h3><i class="fas fa-download" style="color:var(--green);margin-right:6px;font-size:14px"></i>Installation</h3>
+
+  <div class="tabs">
+    <button class="tab-btn on" data-t="supa-install-all">Full Stack Install</button>
+    <button class="tab-btn" data-t="supa-install-ind">Individual Components</button>
+    <button class="tab-btn" data-t="supa-install-global">Global Agents</button>
+  </div>
+
+  <div class="tab-p on" id="supa-install-all">
+    <p>Install all 2 agents, 8 commands, and the MCP server in a single command:</p>
+    <div class="cb"><div class="cb-h"><span class="cb-l">Terminal — Install Everything</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre>npx claude-code-templates@latest \
+  --command supabase-schema-sync,supabase-migration-assistant,supabase-performance-optimizer,supabase-security-audit,supabase-backup-manager,supabase-type-generator,supabase-data-explorer,supabase-realtime-monitor \
+  --agent supabase-schema-architect,supabase-realtime-optimizer \
+  --mcp supabase</pre></div>
+  </div>
+
+  <div class="tab-p" id="supa-install-ind">
+    <p>Install specific components individually as needed:</p>
+    <div class="cb"><div class="cb-h"><span class="cb-l">Terminal — Individual Install</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre># Install a specific agent
+npx claude-code-templates@latest --agent supabase-schema-architect
+
+# Install a specific command
+npx claude-code-templates@latest --command supabase-schema-sync
+
+# Install the MCP server only
+npx claude-code-templates@latest --mcp supabase
+
+# Install multiple commands at once
+npx claude-code-templates@latest --command supabase-schema-sync,supabase-type-generator,supabase-data-explorer</pre></div>
+  </div>
+
+  <div class="tab-p" id="supa-install-global">
+    <p>Create global agents accessible from any project on your machine:</p>
+    <div class="cb"><div class="cb-h"><span class="cb-l">Terminal — Global Agent Management</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre># Create a global agent (available in all projects)
+npx claude-code-templates@latest --create-agent supabase-schema-architect
+
+# List all installed global agents
+npx claude-code-templates@latest --list-agents
+
+# Update an existing global agent
+npx claude-code-templates@latest --update-agent supabase-schema-architect
+
+# Remove a global agent
+npx claude-code-templates@latest --remove-agent supabase-realtime-optimizer</pre></div>
+  </div>
+
+  <!-- PROJECT STRUCTURE -->
+  <h3><i class="fas fa-folder-open" style="color:var(--yellow);margin-right:6px;font-size:14px"></i>Project Structure After Installation</h3>
+  <p>After running the install command, your project directory looks like this:</p>
+
+  <div class="cb"><div class="cb-h"><span class="cb-l">Directory Structure</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre>your-project/
+├── .claude/
+│   ├── commands/
+│   │   ├── supabase-schema-sync.md
+│   │   ├── supabase-migration-assistant.md
+│   │   ├── supabase-performance-optimizer.md
+│   │   ├── supabase-security-audit.md
+│   │   ├── supabase-backup-manager.md
+│   │   ├── supabase-type-generator.md
+│   │   ├── supabase-data-explorer.md
+│   │   └── supabase-realtime-monitor.md
+│   └── agents/
+│       ├── supabase-schema-architect.md
+│       └── supabase-realtime-optimizer.md
+└── .mcp.json</pre></div>
+
+  <div class="co tip"><i class="fas fa-lightbulb"></i><div>Claude Code automatically detects all components in these directories. Commands are available as <code>/commands</code> and agents can be invoked via the Task tool.</div></div>
+
+  <!-- TWO AGENTS -->
+  <h3><i class="fas fa-robot" style="color:var(--purple);margin-right:6px;font-size:14px"></i>The 2 Specialized Agents</h3>
+
+  <div class="card">
+    <div class="card-t"><i class="fas fa-drafting-compass"></i> supabase-schema-architect</div>
+    <p>A dedicated AI agent that focuses on <strong>database design, migrations, and Row-Level Security (RLS) policies</strong>. It analyzes your requirements and generates production-ready schemas with optimal performance.</p>
+    <ul class="cl">
+      <li>Designs normalized database schemas from plain-English descriptions</li>
+      <li>Generates RLS policies for multi-tenant, role-based, and hierarchical access</li>
+      <li>Creates migration files with proper foreign keys, indexes, and constraints</li>
+      <li>Audits existing schemas for security gaps and performance issues</li>
+      <li>Handles complex patterns: multi-tenant SaaS, time-based access, recursive sharing</li>
+    </ul>
+    <div class="cb"><div class="cb-h"><span class="cb-l">Usage</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre># Claude Code automatically delegates to this agent when you ask things like:
+> Design a database schema for a project management app with organizations,
+  projects, tasks, and comments. Add RLS so users only see their org's data.
+
+> Add an orders table with user_id, total_cents, and created_at fields.
+  Include proper RLS policies and generate the migration file.
+
+> Audit all my RLS policies and find any tables with missing or
+  overly permissive access rules.</pre></div>
+  </div>
+
+  <div class="card">
+    <div class="card-t"><i class="fas fa-broadcast-tower"></i> supabase-realtime-optimizer</div>
+    <p>Specializes in <strong>WebSocket optimization and real-time performance</strong>. It monitors connections, optimizes subscriptions, and ensures scalable real-time features.</p>
+    <ul class="cl">
+      <li>Optimizes Supabase Realtime channel subscriptions for performance</li>
+      <li>Monitors WebSocket connection health and diagnostics</li>
+      <li>Designs efficient Presence, Broadcast, and Postgres Changes patterns</li>
+      <li>Identifies and fixes subscription leaks and connection bottlenecks</li>
+      <li>Scales real-time features for production workloads</li>
+    </ul>
+    <div class="cb"><div class="cb-h"><span class="cb-l">Usage</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre># Claude Code delegates to this agent for real-time tasks:
+> Optimize my Realtime subscriptions — I have 12 channels and
+  the WebSocket keeps disconnecting under load.
+
+> Build a real-time notification system using Postgres Changes
+  that scales to 10k concurrent users.
+
+> Add Presence tracking to show who's online in each chat room
+  with minimal bandwidth usage.</pre></div>
+  </div>
+
+  <!-- EIGHT COMMANDS -->
+  <h3><i class="fas fa-terminal" style="color:var(--blue);margin-right:6px;font-size:14px"></i>The 8 Database Commands</h3>
+  <p>Each command is a slash command (e.g., <code>/supabase-schema-sync</code>) you can invoke directly in Claude Code.</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Command</th><th>Description</th><th>Key Capabilities</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>/supabase-schema-sync</code></td>
+          <td>Schema Synchronization</td>
+          <td>Syncs local and remote schemas, detects drift between environments, version control integration</td>
+        </tr>
+        <tr>
+          <td><code>/supabase-migration-assistant</code></td>
+          <td>Migration Management</td>
+          <td>Generates, manages, and executes migrations with rollback capabilities and safety checks</td>
+        </tr>
+        <tr>
+          <td><code>/supabase-performance-optimizer</code></td>
+          <td>Query Performance</td>
+          <td>Analyzes query performance, suggests indexes, identifies slow queries and optimization opportunities</td>
+        </tr>
+        <tr>
+          <td><code>/supabase-security-audit</code></td>
+          <td>Security Analysis</td>
+          <td>Comprehensive security scanning, RLS policy validation, permission gap detection</td>
+        </tr>
+        <tr>
+          <td><code>/supabase-backup-manager</code></td>
+          <td>Backup &amp; Recovery</td>
+          <td>Automated backup scheduling, disaster recovery procedures, point-in-time restore</td>
+        </tr>
+        <tr>
+          <td><code>/supabase-type-generator</code></td>
+          <td>TypeScript Types</td>
+          <td>Generates TypeScript types from your database schema, keeps types in sync with migrations</td>
+        </tr>
+        <tr>
+          <td><code>/supabase-data-explorer</code></td>
+          <td>Data Exploration</td>
+          <td>Interactive data exploration, visual query building, data inspection and filtering</td>
+        </tr>
+        <tr>
+          <td><code>/supabase-realtime-monitor</code></td>
+          <td>Realtime Monitoring</td>
+          <td>WebSocket health diagnostics, connection monitoring, subscription performance tracking</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MCP SERVER -->
+  <h3><i class="fas fa-plug" style="color:var(--green);margin-right:6px;font-size:14px"></i>MCP Server Configuration</h3>
+  <p>The MCP server provides direct Supabase API integration through the Model Context Protocol. After installation, your <code>.mcp.json</code> is configured automatically.</p>
+
+  <div class="tabs">
+    <button class="tab-btn on" data-t="supa-mcp-remote">Remote MCP (Recommended)</button>
+    <button class="tab-btn" data-t="supa-mcp-config">Project-scoped Config</button>
+    <button class="tab-btn" data-t="supa-mcp-tools">Available Tools</button>
+  </div>
+
+  <div class="tab-p on" id="supa-mcp-remote">
+    <p>Supabase provides an official Remote MCP Server — the simplest way to connect. No API keys or tokens needed; authenticate via browser.</p>
+    <div class="cb"><div class="cb-h"><span class="cb-l">.mcp.json — Remote MCP</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre>{
+  "mcpServers": {
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp"
+    }
+  }
+}</pre></div>
+    <p>Then authenticate in Claude Code:</p>
+    <div class="cb"><div class="cb-h"><span class="cb-l">Terminal</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre># Add via CLI
+claude mcp add --transport http supabase https://mcp.supabase.com/mcp
+
+# Authenticate (opens browser login)
+# Type /mcp in Claude Code and follow the login flow</pre></div>
+  </div>
+
+  <div class="tab-p" id="supa-mcp-config">
+    <p>For project-scoped or read-only configurations:</p>
+    <div class="cb"><div class="cb-h"><span class="cb-l">.mcp.json — Project-scoped &amp; Read-only</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre>{
+  "mcpServers": {
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=YOUR_PROJECT_REF&amp;read_only=true"
+    }
+  }
+}</pre></div>
+    <p>URL parameters for fine-grained control:</p>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Parameter</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>read_only=true</code></td><td>Executes queries as a read-only Postgres user</td></tr>
+          <tr><td><code>project_ref=&lt;id&gt;</code></td><td>Restricts access to a specific Supabase project</td></tr>
+          <tr><td><code>features=&lt;groups&gt;</code></td><td>Enables only specified tool groups (e.g., <code>database,docs</code>)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tab-p" id="supa-mcp-tools">
+    <p>The MCP server exposes these tool categories to Claude Code:</p>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Category</th><th>Tools</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Database</strong></td><td><code>list_tables</code>, <code>list_extensions</code>, <code>list_migrations</code>, <code>apply_migration</code>, <code>execute_sql</code></td></tr>
+          <tr><td><strong>Edge Functions</strong></td><td><code>list_edge_functions</code>, <code>get_edge_function</code>, <code>deploy_edge_function</code></td></tr>
+          <tr><td><strong>Development</strong></td><td><code>get_project_url</code>, <code>get_publishable_keys</code>, <code>generate_typescript_types</code></td></tr>
+          <tr><td><strong>Debugging</strong></td><td><code>get_logs</code>, <code>get_advisors</code></td></tr>
+          <tr><td><strong>Account</strong></td><td>Project/organization operations, cost information</td></tr>
+          <tr><td><strong>Branching</strong></td><td>Branch management (requires paid plan)</td></tr>
+          <tr><td><strong>Storage</strong></td><td>Bucket listing and configuration (disabled by default)</td></tr>
+          <tr><td><strong>Documentation</strong></td><td><code>search_docs</code> — search Supabase docs from Claude Code</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS TOGETHER -->
+  <h3><i class="fas fa-cogs" style="color:var(--cyan);margin-right:6px;font-size:14px"></i>How It All Works Together</h3>
+  <p>With agents, commands, and MCP working together, Claude Code becomes a full-featured Supabase development environment:</p>
+
+  <div class="steps">
+    <div class="stp">
+      <h4>Ask Claude in plain English</h4>
+      <p>"Add an orders table with user_id, total_cents, and created_at fields"</p>
+    </div>
+    <div class="stp">
+      <h4>Schema Architect agent designs the schema</h4>
+      <p>Generates the table, proper foreign keys, indexes, and RLS policies automatically.</p>
+    </div>
+    <div class="stp">
+      <h4>Migration Assistant creates the migration file</h4>
+      <p>Writes the SQL migration to <code>supabase/migrations/</code> with rollback support.</p>
+    </div>
+    <div class="stp">
+      <h4>MCP server applies it to your project</h4>
+      <p>Executes the migration directly against your Supabase database through the MCP connection.</p>
+    </div>
+    <div class="stp">
+      <h4>Security Audit validates the result</h4>
+      <p>Scans the new table for missing RLS policies, permission gaps, or security issues.</p>
+    </div>
+    <div class="stp">
+      <h4>Type Generator updates your TypeScript types</h4>
+      <p>Regenerates <code>database.ts</code> so your frontend stays in sync with the schema.</p>
+    </div>
+  </div>
+
+  <!-- PRACTICAL EXAMPLES -->
+  <h3><i class="fas fa-magic" style="color:var(--accent-l);margin-right:6px;font-size:14px"></i>Practical Use Cases</h3>
+
+  <div class="card">
+    <div class="card-t"><i class="fas fa-shield-alt"></i> Security Auditing</div>
+    <p>Ask Claude to review your entire Supabase project for security issues. The Security Audit command scans all tables, RLS policies, and permissions.</p>
+    <div class="cb"><div class="cb-h"><span class="cb-l">Prompt</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre>> Run a security audit on my Supabase project. Check all tables for
+  missing RLS policies, overly permissive access rules, and exposed
+  service_role patterns. Generate a report with fixes.</pre></div>
+  </div>
+
+  <div class="card">
+    <div class="card-t"><i class="fas fa-code"></i> Type-safe Development</div>
+    <p>Keep TypeScript types perfectly in sync with your database schema.</p>
+    <div class="cb"><div class="cb-h"><span class="cb-l">Prompt</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre>> Generate TypeScript types from my current Supabase schema and create
+  a typed client wrapper. Make sure all my queries are type-safe.</pre></div>
+  </div>
+
+  <div class="card">
+    <div class="card-t"><i class="fas fa-tachometer-alt"></i> Performance Optimization</div>
+    <p>Analyze and optimize query performance across your Supabase database.</p>
+    <div class="cb"><div class="cb-h"><span class="cb-l">Prompt</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre>> Analyze my database query performance. Find the slowest queries,
+  suggest missing indexes, and optimize the RLS policies that are
+  causing the most overhead.</pre></div>
+  </div>
+
+  <div class="card">
+    <div class="card-t"><i class="fas fa-sync-alt"></i> Schema Synchronization</div>
+    <p>Detect and resolve schema drift between local and remote environments.</p>
+    <div class="cb"><div class="cb-h"><span class="cb-l">Prompt</span><button class="cb-c" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button></div><pre>> Check if my local schema is in sync with the remote Supabase project.
+  Show me any drift and generate migrations to reconcile differences.</pre></div>
+  </div>
+
+  <!-- SECURITY NOTES -->
+  <div class="co warn"><i class="fas fa-exclamation-triangle"></i><div><strong>Security best practices:</strong> Always test in sandboxed environments before applying to production. Use <code>read_only=true</code> for sensitive environments. Restrict access with <code>project_ref</code> scoping. Agents accelerate routine work but cannot replace architectural decision-making expertise.</div></div>
+
+  <div class="co info"><i class="fas fa-info-circle"></i><div><strong>Source:</strong> Based on <a href="https://medium.com/@dan.avila7/claude-code-supabase-integration-complete-guide-with-agents-commands-and-mcp-427613d9051e" target="_blank">Claude Code + Supabase Integration</a> by Daniel Avila. Templates via <a href="https://github.com/davila7/claude-code-templates" target="_blank">claude-code-templates</a> (<a href="https://www.aitmpl.com" target="_blank">aitmpl.com</a> — 800+ Claude Code components). MCP docs: <a href="https://supabase.com/docs/guides/getting-started/mcp" target="_blank">Supabase MCP Guide</a>.</div></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- TUTORIALS & VIDEOS -->
+<!-- ============================================================ -->
+<section class="sec" id="tutorials">
+  <div class="sec-head"><div class="sec-ico o"><i class="fas fa-play-circle"></i></div><div><h2>Tutorials & Videos</h2><p class="sub">Watch and learn from demos</p></div></div>
+
+  <div class="vgrid">
+    <div class="vcard">
+      <iframe src="https://www.youtube.com/embed/6eBSHbLKuN0" title="Mastering Claude Code in 30 Minutes" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+      <div class="vcard-i"><h4>Mastering Claude Code in 30 Minutes</h4><p>Official walkthrough of Claude Code's features and agentic workflows.</p></div>
+    </div>
+    <div class="vcard">
+      <iframe src="https://www.youtube.com/embed/gv0WHhKelSE" title="Claude Code Best Practices" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+      <div class="vcard-i"><h4>Claude Code Best Practices</h4><p>Tips for effective prompting and workflow optimization with Claude Code.</p></div>
+    </div>
+    <div class="vcard">
+      <iframe src="https://www.youtube.com/embed/nZCy8E5jlok" title="Taking Claude to the Next Level" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+      <div class="vcard-i"><h4>Taking Claude to the Next Level</h4><p>Advanced features, MCP integrations, and scaling with Claude Code.</p></div>
+    </div>
+    <div class="vcard">
+      <iframe src="https://www.youtube.com/embed/dRsjO-88nBs" title="Building Headless Automation with Claude Code" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+      <div class="vcard-i"><h4>Building Headless Automation</h4><p>Automate workflows with Claude Code's headless mode and SDK.</p></div>
+    </div>
+  </div>
+
+  <div class="co info"><i class="fas fa-info-circle"></i><div>If videos don't load, they may be blocked by your network. Visit <a href="https://www.youtube.com/@AnthropicAI" target="_blank">Anthropic's YouTube channel</a> directly.</div></div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RESOURCES -->
+<!-- ============================================================ -->
+<section class="sec" id="resources">
+  <div class="sec-head"><div class="sec-ico b"><i class="fas fa-book"></i></div><div><h2>Documentation & Links</h2><p class="sub">Official docs and community resources</p></div></div>
+
+  <h3>Official Documentation</h3>
+  <div class="rgrid">
+    <a href="https://code.claude.com/docs/en/overview" target="_blank" class="rlink"><i class="fas fa-compass"></i><div><h4>Overview</h4><p>What Claude Code is and platforms</p></div></a>
+    <a href="https://code.claude.com/docs/en/quickstart" target="_blank" class="rlink"><i class="fas fa-rocket"></i><div><h4>Quickstart</h4><p>Install and start in 5 minutes</p></div></a>
+    <a href="https://code.claude.com/docs/en/how-claude-code-works" target="_blank" class="rlink"><i class="fas fa-cogs"></i><div><h4>How It Works</h4><p>The agentic loop and tools</p></div></a>
+    <a href="https://code.claude.com/docs/en/common-workflows" target="_blank" class="rlink"><i class="fas fa-code-branch"></i><div><h4>Common Workflows</h4><p>Step-by-step task guides</p></div></a>
+    <a href="https://code.claude.com/docs/en/best-practices" target="_blank" class="rlink"><i class="fas fa-star"></i><div><h4>Best Practices</h4><p>Prompting and optimization tips</p></div></a>
+    <a href="https://code.claude.com/docs" target="_blank" class="rlink"><i class="fas fa-book"></i><div><h4>Full Docs</h4><p>Complete documentation</p></div></a>
+  </div>
+
+  <h3>Deep Dive Pages</h3>
+  <div class="rgrid">
+    <a href="https://code.claude.com/docs/en/cli-usage" target="_blank" class="rlink"><i class="fas fa-terminal"></i><div><h4>CLI Reference</h4><p>All commands and flags</p></div></a>
+    <a href="https://code.claude.com/docs/en/ide-integrations" target="_blank" class="rlink"><i class="fas fa-code"></i><div><h4>IDE Integrations</h4><p>VS Code, JetBrains setup</p></div></a>
+    <a href="https://code.claude.com/docs/en/mcp" target="_blank" class="rlink"><i class="fas fa-plug"></i><div><h4>MCP Protocol</h4><p>External tool integrations</p></div></a>
+    <a href="https://code.claude.com/docs/en/sub-agents" target="_blank" class="rlink"><i class="fas fa-users-cog"></i><div><h4>Subagents</h4><p>Specialized assistants</p></div></a>
+    <a href="https://code.claude.com/docs/en/hooks" target="_blank" class="rlink"><i class="fas fa-bolt"></i><div><h4>Hooks</h4><p>Automation triggers</p></div></a>
+    <a href="https://code.claude.com/docs/en/settings" target="_blank" class="rlink"><i class="fas fa-sliders-h"></i><div><h4>Settings</h4><p>Configuration reference</p></div></a>
+    <a href="https://code.claude.com/docs/en/permissions" target="_blank" class="rlink"><i class="fas fa-shield-alt"></i><div><h4>Permissions</h4><p>Security and access control</p></div></a>
+    <a href="https://code.claude.com/docs/en/security" target="_blank" class="rlink"><i class="fas fa-lock"></i><div><h4>Security</h4><p>Data privacy details</p></div></a>
+    <a href="https://code.claude.com/docs/en/github-actions" target="_blank" class="rlink"><i class="fab fa-github"></i><div><h4>GitHub Actions</h4><p>CI/CD integration</p></div></a>
+    <a href="https://code.claude.com/docs/en/troubleshooting" target="_blank" class="rlink"><i class="fas fa-wrench"></i><div><h4>Troubleshooting</h4><p>Common issues and fixes</p></div></a>
+  </div>
+
+  <h3>Community</h3>
+  <div class="rgrid">
+    <a href="https://github.com/anthropics/claude-code" target="_blank" class="rlink"><i class="fab fa-github"></i><div><h4>Claude Code GitHub</h4><p>Source, issues, releases</p></div></a>
+    <a href="https://github.com/FlorianBruniaux/claude-code-ultimate-guide" target="_blank" class="rlink"><i class="fas fa-trophy"></i><div><h4>Ultimate Guide (Community)</h4><p>Cheatsheet, quizzes, and tips</p></div></a>
+    <a href="https://www.anthropic.com/engineering/claude-code-best-practices" target="_blank" class="rlink"><i class="fas fa-award"></i><div><h4>Anthropic Engineering Blog</h4><p>Official best practices post</p></div></a>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FAQ -->
+<!-- ============================================================ -->
+<section class="sec" id="faq">
+  <div class="sec-head"><div class="sec-ico g"><i class="fas fa-question-circle"></i></div><div><h2>FAQ</h2><p class="sub">Frequently asked questions</p></div></div>
+
+  <div class="fq"><div class="fq-q" onclick="this.parentElement.classList.toggle('open')">What subscription do I need? <i class="fas fa-chevron-down"></i></div><div class="fq-a"><div class="fq-a-in">Claude Code requires a <strong>Pro</strong> ($20/mo), <strong>Max</strong> ($100 or $200/mo), <strong>Team</strong>, or <strong>Enterprise</strong> plan. Alternatively, you can use an Anthropic Console account with API credits. The free tier does not include Claude Code.</div></div></div>
+
+  <div class="fq"><div class="fq-q" onclick="this.parentElement.classList.toggle('open')">What if I hit usage limits? <i class="fas fa-chevron-down"></i></div><div class="fq-a"><div class="fq-a-in">Pro has a rolling usage window — wait and it resets. Max plans have much higher limits. Reduce consumption by using Sonnet (default) for routine tasks and reserving Opus for complex reasoning. Use <code>/compact</code> to save context tokens.</div></div></div>
+
+  <div class="fq"><div class="fq-q" onclick="this.parentElement.classList.toggle('open')">How do I integrate Claude Code with our repo? <i class="fas fa-chevron-down"></i></div><div class="fq-a"><div class="fq-a-in">Just <code>cd</code> into your project and run <code>claude</code>. It reads your codebase, respects <code>.gitignore</code>, and works within your existing git workflow. Add a <code>CLAUDE.md</code> for team standards. For CI, use the <code>claude-code-action</code> GitHub Action.</div></div></div>
+
+  <div class="fq"><div class="fq-q" onclick="this.parentElement.classList.toggle('open')">How is this different from GitHub Copilot or ChatGPT? <i class="fas fa-chevron-down"></i></div><div class="fq-a"><div class="fq-a-in">Claude Code is <strong>agentic</strong> — it doesn't just suggest code, it reads your entire codebase, edits files, runs terminal commands, manages git, and iterates on failures. It operates in a loop (gather context → act → verify) rather than generating one-shot completions. It works in your actual project context, not a sandboxed snippet environment.</div></div></div>
+
+  <div class="fq"><div class="fq-q" onclick="this.parentElement.classList.toggle('open')">Is my code sent to Anthropic? <i class="fas fa-chevron-down"></i></div><div class="fq-a"><div class="fq-a-in">Yes, code context is sent to Anthropic's API for processing. Anthropic does <strong>not</strong> train on your data by default. Team and Enterprise plans have additional data privacy guarantees. Claude respects <code>.gitignore</code> and never sends ignored files.</div></div></div>
+
+  <div class="fq"><div class="fq-q" onclick="this.parentElement.classList.toggle('open')">Can Claude run destructive commands? <i class="fas fa-chevron-down"></i></div><div class="fq-a"><div class="fq-a-in">Claude has a permission system. It asks approval before running commands that modify your system. You can configure permission levels — from asking every time to auto-approving safe operations. It won't force-push, delete branches, or run <code>rm -rf</code> without explicit approval.</div></div></div>
+
+  <div class="fq"><div class="fq-q" onclick="this.parentElement.classList.toggle('open')">What languages and frameworks does it support? <i class="fas fa-chevron-down"></i></div><div class="fq-a"><div class="fq-a-in">Any language and framework. Especially strong with JavaScript/TypeScript, Python, Rust, Go, Java, C/C++, Ruby, PHP. Understands React, Next.js, Django, FastAPI, Express, Rails, and more. Also works with infrastructure code (Terraform, Docker, Kubernetes).</div></div></div>
+
+  <div class="fq"><div class="fq-q" onclick="this.parentElement.classList.toggle('open')">How do I resume a previous session? <i class="fas fa-chevron-down"></i></div><div class="fq-a"><div class="fq-a-in">Run <code>claude -c</code> to continue the most recent session, or <code>claude -r</code> for an interactive picker. Name sessions with <code>/rename my-task</code> for easy resumption later: <code>claude -r my-task</code>.</div></div></div>
+
+  <div class="fq"><div class="fq-q" onclick="this.parentElement.classList.toggle('open')">Can I use Claude Code in a monorepo? <i class="fas fa-chevron-down"></i></div><div class="fq-a"><div class="fq-a-in">Yes. Claude handles monorepos well — it navigates packages, understands workspace configs (pnpm workspaces, Turborepo, Nx, Lerna), and works across multiple packages. Use <code>--add-dir</code> to include additional directories.</div></div></div>
+
+  <div class="fq"><div class="fq-q" onclick="this.parentElement.classList.toggle('open')">What's the difference between subagents and agent teams? <i class="fas fa-chevron-down"></i></div><div class="fq-a"><div class="fq-a-in"><strong>Subagents</strong> work within a single session — they're like specialized helpers that get their own context window. <strong>Agent teams</strong> coordinate across separate sessions with separate git worktrees, useful for large parallelizable tasks. Use subagents for most cases; agent teams for big multi-service changes.</div></div></div>
+</section>
+
+</main>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div><strong>Internal Team Guide</strong> · Last updated: February 16, 2026 · Questions? Ask in <strong>#dev-tools</strong> on Slack</div>
+  <div>Built with Claude Code · <a href="https://anthropic.com" target="_blank">Powered by Anthropic</a></div>
+</footer>
+
+<!-- JS -->
+<script>
+// === THEME TOGGLE ===
+function toggleTheme(){
+  const html=document.documentElement;
+  const isLight=html.getAttribute('data-theme')==='light';
+  html.setAttribute('data-theme',isLight?'dark':'light');
+  localStorage.setItem('theme',isLight?'dark':'light');
+}
+(function(){
+  const saved=localStorage.getItem('theme');
+  if(saved==='light') document.documentElement.setAttribute('data-theme','light');
+})();
+
+// === SIDEBAR NAV ===
+document.querySelectorAll('.sb-nav a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',()=>document.getElementById('sb').classList.remove('open'));
+});
+
+// === ACTIVE SECTION TRACKING ===
+const allSecs=document.querySelectorAll('.sec');
+const allLinks=document.querySelectorAll('.sb-nav a[href^="#"]');
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      allLinks.forEach(l=>l.classList.remove('active'));
+      const a=document.querySelector(`.sb-nav a[href="#${e.target.id}"]`);
+      if(a)a.classList.add('active');
+    }
+  });
+},{rootMargin:'-15% 0px -75% 0px',threshold:0});
+allSecs.forEach(s=>obs.observe(s));
+
+// === TABS ===
+document.querySelectorAll('.tab-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const t=b.dataset.t;
+    const tabBar=b.closest('.tabs');
+    // Toggle buttons in this tab bar only
+    tabBar.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    // Toggle panels: collect sibling .tab-p elements after this .tabs bar
+    let el=tabBar.nextElementSibling;
+    while(el && el.classList.contains('tab-p')){
+      el.classList.remove('on');
+      el=el.nextElementSibling;
+    }
+    document.getElementById(t)?.classList.add('on');
+  });
+});
+
+// === COPY CODE ===
+function copyCode(btn){
+  const cb=btn.closest('.cb');
+  const code=(cb.querySelector('code')||cb.querySelector('pre')).textContent;
+  navigator.clipboard.writeText(code).then(()=>{
+    btn.classList.add('ok');
+    btn.innerHTML='<i class="fas fa-check"></i> Copied';
+    setTimeout(()=>{btn.classList.remove('ok');btn.innerHTML='<i class="fas fa-copy"></i> Copy';},2000);
+  });
+}
+
+// === SEARCH ===
+const si=document.getElementById('si');
+const sr=document.getElementById('sr');
+
+function buildIndex(){
+  const idx=[];
+  document.querySelectorAll('.sec').forEach(sec=>{
+    const title=sec.querySelector('h2')?.textContent||'';
+    const id=sec.id;
+    sec.querySelectorAll('h2,h3,h4').forEach(h=>{
+      idx.push({t:'heading',sec:title,txt:h.textContent,id,el:h});
+    });
+    sec.querySelectorAll('p,li,td,.fq-q,.fq-a-in').forEach(el=>{
+      const t=el.textContent.trim();
+      if(t.length>12&&t.length<400)idx.push({t:'content',sec:title,txt:t,id,el});
+    });
+  });
+  return idx;
+}
+const idx=buildIndex();
+let selIdx=-1;
+
+function doSearch(q){
+  selIdx=-1;
+  if(!q||q.length<2){sr.classList.remove('open');return;}
+  const ql=q.toLowerCase();
+  const words=ql.split(/\s+/).filter(w=>w.length>1);
+  const matches=idx.filter(item=>{
+    const tl=item.txt.toLowerCase();
+    return words.every(w=>tl.includes(w));
+  }).slice(0,15);
+
+  // Deduplicate
+  const seen=new Set();
+  const unique=matches.filter(m=>{
+    const k=m.id+'|'+m.txt.substring(0,50);
+    if(seen.has(k))return false;seen.add(k);return true;
+  }).slice(0,10);
+
+  if(!unique.length){
+    sr.innerHTML='<div class="sr-empty"><i class="fas fa-search" style="margin-right:6px;opacity:.4"></i>No results for "'+esc(q)+'"</div>';
+    sr.classList.add('open');return;
+  }
+
+  sr.innerHTML=unique.map((m,i)=>{
+    const ht=hilite(trunc(m.txt,90),q);
+    return `<div class="sr-item" data-i="${i}" onclick="goResult('${m.id}',this)">
+      <div class="sr-cat">${esc(m.sec)}</div>
+      <div class="sr-txt">${ht}</div>
+    </div>`;
+  }).join('');
+  sr.classList.add('open');
+}
+
+function goResult(id,el){
+  const sec=document.getElementById(id);
+  if(sec){sec.scrollIntoView({behavior:'smooth',block:'start'});}
+  sr.classList.remove('open');si.blur();
+  // Flash
+  sec.style.outline='2px solid var(--accent)';sec.style.outlineOffset='4px';
+  setTimeout(()=>{sec.style.outline='';sec.style.outlineOffset='';},2000);
+}
+
+function hilite(txt,q){
+  const words=q.split(/\s+/).filter(w=>w.length>1);
+  let h=esc(txt);
+  words.forEach(w=>{
+    const re=new RegExp('('+escRe(w)+')','gi');
+    h=h.replace(re,'<mark>$1</mark>');
+  });
+  return h;
+}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function escRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function trunc(s,n){return s.length>n?s.substring(0,n)+'…':s;}
+
+let debounce;
+si.addEventListener('input',()=>{clearTimeout(debounce);debounce=setTimeout(()=>doSearch(si.value.trim()),120);});
+
+// Keyboard navigation in search results
+si.addEventListener('keydown',e=>{
+  const items=sr.querySelectorAll('.sr-item');
+  if(e.key==='ArrowDown'){e.preventDefault();selIdx=Math.min(selIdx+1,items.length-1);updateSel(items);}
+  else if(e.key==='ArrowUp'){e.preventDefault();selIdx=Math.max(selIdx-1,0);updateSel(items);}
+  else if(e.key==='Enter'&&selIdx>=0&&items[selIdx]){e.preventDefault();items[selIdx].click();}
+  else if(e.key==='Escape'){sr.classList.remove('open');si.blur();}
+});
+function updateSel(items){items.forEach((it,i)=>it.classList.toggle('active',i===selIdx));}
+
+document.addEventListener('click',e=>{if(!e.target.closest('.search-box'))sr.classList.remove('open');});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();si.focus();si.select();}});
+
+// === SMOOTH SCROLL ===
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'});}
+  });
+});
+</script>
+</body>
+</html>
